@@ -63,6 +63,7 @@ using  std::endl;
 
 
 ////Timing
+//float t = clock();
 //cout << "time #.1 :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //t = clock();
 

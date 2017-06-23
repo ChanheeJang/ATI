@@ -91,6 +91,12 @@
 #define IDD_DIALOG2                     318
 #define ID_Preview                      32771
 #define ID_FILE_PREVIEW                 32773
+#define ID_DILATE                       32774
+#define ID_ERODE                        32775
+#define ID_EDIT_DILATE                  32776
+#define ID_EDIT_ERODE                   32777
+#define ID_RESET                        32778
+#define ID_EDIT_RESETIMAGE              32779
 #define IDS_CANNOT_LOAD_DIB             61446
 #define IDS_CANNOT_SAVE_DIB             61447
 
@@ -99,7 +105,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        319
-#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

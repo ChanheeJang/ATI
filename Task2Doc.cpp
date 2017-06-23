@@ -33,12 +33,14 @@ END_MESSAGE_MAP()
 CTask2Doc::CTask2Doc()
 {
 	myImage = new myZoomInfo;
+	oldSrc = NULL;
 	// TODO: add one-time construction code here
 
 }
 
 CTask2Doc::~CTask2Doc()
 {
+	delete oldSrc;
 }
 
 BOOL CTask2Doc::OnNewDocument()
@@ -163,7 +165,7 @@ BOOL CTask2Doc::OnOpenDocument(LPCTSTR lpszPathName)
  // replace calls to Serialize with ReadDIBFile function
 	TRY{
 		//m_DIB.Read(&file);
-		m_DIB.ReadSection(&file);
+		m_DIB.Read(&file);
 		myImage->triggerInit();
 	}
 	CATCH(CFileException, eLoad) {

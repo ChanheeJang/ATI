@@ -63,6 +63,9 @@ protected:
 public:
 	afx_msg void OnPreview();
 	afx_msg void OnDestroy();
+	afx_msg void OnDilate();
+	afx_msg void OnErode();
+	afx_msg void OnReset();
 };
 
 

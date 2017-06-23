@@ -73,8 +73,6 @@ BOOL CTask2App::InitInstance()
 
 	CWinAppEx::InitInstance();
 
-	//CDib tt;
-	//tt.Draw()
 	// Initialize OLE libraries
 	if (!AfxOleInit())
 	{

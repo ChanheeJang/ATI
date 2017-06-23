@@ -2,10 +2,12 @@
 // MainFrm.cpp : implementation of the CMainFrame class
 //
 
+#pragma once
 #include "stdafx.h"
 #include "Task2.h"
 #include "myDial.h"
 #include "MainFrm.h"
+#include "Task2View.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -27,6 +29,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_WM_SETTINGCHANGE()
 	ON_COMMAND(ID_Preview, &CMainFrame::OnPreview)
 	ON_WM_DESTROY()
+	ON_COMMAND(ID_DILATE, &CMainFrame::OnDilate)
+	ON_COMMAND(ID_ERODE, &CMainFrame::OnErode)
+	ON_COMMAND(ID_RESET, &CMainFrame::OnReset)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -435,4 +440,107 @@ void CMainFrame::OnDestroy()
 	CFrameWndEx::OnDestroy();
 }
 
- 
+
+
+void CMainFrame::OnDilate()
+{
+	float t = clock();
+
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	pDoc->myImage->DisableAllOptions();
+	int nWidth = pDoc->myImage->GetSrcSize().cx;
+	int nHeight = pDoc->myImage->GetSrcSize().cy;
+
+	if (pDoc->oldSrc == NULL)
+	{
+		pDoc->oldSrc = new BYTE[nWidth*nHeight];
+		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);		 
+	}
+
+	LPBYTE prevImg = new BYTE[(nWidth+2)*(nHeight+2)];
+
+ 	for (size_t i = 0; i < nHeight; i++)
+	{
+		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
+	}
+
+	for (size_t i = 0; i < nHeight; i++)
+	{
+		for (size_t j = 0; j < nWidth; j++)
+		{
+			int localMax = prevImg[(i+1)*(nWidth+2) + j+1];
+			for (int k = -1; k < 2; k++)
+			{
+				for (int l = -1; l < 2; l++)
+				{
+					if (localMax < prevImg[(i + l+1)* (nWidth+2) + j + k+1])
+						localMax = prevImg[(i + l+1)* (nWidth+2) + j + k+1];
+				}
+			}
+			pDoc->m_DIB.SetPixel(CPoint(j , nHeight - (i+1)), localMax);
+		}
+	}
+	cout << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+	CTask2View *pView = (CTask2View*)GetActiveView();
+	pView->Invalidate(false);
+}
+
+
+void CMainFrame::OnErode()
+{
+	float t = clock();
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	pDoc->myImage->DisableAllOptions();
+	int nWidth = pDoc->myImage->GetSrcSize().cx;
+	int nHeight = pDoc->myImage->GetSrcSize().cy;
+
+	if (pDoc->oldSrc == NULL)
+	{
+		pDoc->oldSrc = new BYTE[nWidth*nHeight];
+		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);
+	}
+
+	LPBYTE prevImg = new BYTE[(nWidth+2)*(nHeight+2)];
+	for (int i = 0; i < (nHeight); i++)
+		memcpy(prevImg + (nWidth+2)*(i+1)+ 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
+
+
+	for (size_t i = 0; i < nHeight; i++)
+	{
+		for (size_t j = 0; j < nWidth; j++)
+		{
+			int localMin = prevImg[(i+1)*(nWidth+2)] + j+1;
+			for (int k = -1; k < 2; k++)
+			{
+				for (int l = -1; l < 2; l++)
+				{
+					if (localMin > prevImg[(i + l+1)* (nWidth+2) + j + k+1])//  
+						localMin = prevImg[(i + l+1)* (nWidth+2) + j + k+1];
+				}
+			}
+			pDoc->m_DIB.SetPixel(CPoint(j , nHeight -i-1), localMin);
+		}
+	}
+
+	cout << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+
+	CTask2View *pView = (CTask2View*)GetActiveView();
+	pView->Invalidate(false);
+}
+
+
+void CMainFrame::OnReset()
+{
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	if (pDoc->oldSrc != NULL)
+	{
+		memcpy(pDoc->m_DIB.m_lpImage, pDoc->oldSrc, pDoc->myImage->GetSrcSize().cx*pDoc->myImage->GetSrcSize().cy);
+	 
+		CTask2View *pView = (CTask2View*)GetActiveView();
+		pView->Invalidate(false);
+		cout << "Get me back to where i was" << endl;
+
+	}
+}

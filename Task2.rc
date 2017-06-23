@@ -131,10 +131,10 @@ BEGIN
     BUTTON      ID_FILE_SAVE
     SEPARATOR
     BUTTON      ID_Preview
-    BUTTON      ID_EDIT_COPY
-    BUTTON      ID_EDIT_PASTE
+    BUTTON      ID_DILATE
+    BUTTON      ID_ERODE
     SEPARATOR
-    BUTTON      ID_FILE_PRINT
+    BUTTON      ID_RESET
     BUTTON      ID_APP_ABOUT
 END
 
@@ -195,6 +195,9 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
+        MENUITEM "Reset Image",                 ID_RESET
+        MENUITEM "Dilate",                      ID_DILATE
+        MENUITEM "Erode",                       ID_ERODE
         MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
         MENUITEM SEPARATOR
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
@@ -585,6 +588,9 @@ END
 STRINGTABLE
 BEGIN
     ID_Preview              "Open Preview Window"
+    ID_DILATE               "dilate image"
+    ID_ERODE                "Erode Image"
+    ID_RESET                "Reset Image to its Original"
 END
 
 #endif    // 영어(미국) resources

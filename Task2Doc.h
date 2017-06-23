@@ -51,7 +51,7 @@ protected:
 #endif // SHARED_HANDLERS
 public:
 	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
-
+	LPBYTE oldSrc;
 	//BOOL IsValid() const { return m_DIB.IsValid(); }
 	//DWORD Width()  { return (DWORD)m_DIB.GetWidth(); }
 	//DWORD Height()  { return (DWORD)m_DIB.GetHeight(); }

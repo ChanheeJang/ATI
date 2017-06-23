@@ -41,13 +41,12 @@ END_MESSAGE_MAP()
 
 CTask2View::CTask2View()
 {
-	// TODO: add construction code here
- 
+
 }
 
 CTask2View::~CTask2View()
 {
- 
+	 
 }
 
 BOOL CTask2View::PreCreateWindow(CREATESTRUCT& cs)
@@ -93,7 +92,7 @@ void CTask2View::OnDraw(CDC* pDC)
 		else if (pDoc->myImage->EnableDrag)			srcZoomRect = pDoc->myImage->Shift2NewCenter(pDoc->myImage->GetSrcZoomCenter(), pDoc->myImage->GetSrcZoomSize());
 		else if (pDoc->myImage->EnablePreviewShift)	srcZoomRect = pDoc->myImage->Shift2NewCenter(pDoc->myImage->GetSrcZoomCenter(), pDoc->myImage->GetSrcZoomSize());
 		else if (pDoc->myImage->EnablePreviewDrag)	srcZoomRect = pDoc->myImage->Shift2NewCenter(pDoc->myImage->GetSrcZoomCenter(), pDoc->myImage->GetSrcZoomSize());
-
+	 
 		////////////////////////////////////////////////////////tt
 		pDoc->myImage->SetSrcZoomRect(srcZoomRect);
 		pDoc->m_DIB.Draw(pDC, frameRect, srcZoomRect);
@@ -104,6 +103,7 @@ void CTask2View::OnDraw(CDC* pDC)
 		CString msg;
 		msg.Format(_T("Magnification: x%.2f"),pDoc->myImage->getZoom());
 		pFrame->m_wndStatusBar.SetPaneText(2, msg);
+
 	}
 }
 
@@ -202,7 +202,6 @@ void CTask2View::OnLButtonDown(UINT nFlags, CPoint point)
 		pDoc->myImage->IsLButtonDown = true;
 	}
 	Invalidate(false); //-- By setting false, it does not erase background when updating and therefore Elliminate "blinking problem"
-
 	CView::OnLButtonDown(nFlags, point);
 }
 
@@ -287,3 +286,38 @@ void CTask2View::OnSize(UINT nType, int cx, int cy)
 	pDoc->myImage->CalcFrameRect();
 	pDoc->myImage->DisableAllOptions(); // Disable Flags when WM_SIZING
 }
+
+
+void CTask2View::OnInitialUpdate()
+{
+	CView::OnInitialUpdate();	
+	//VERIFY(m_pOleDropTarget.Register(this));    // 초기화(등록)
+}
+
+
+//
+//DROPEFFECT CTask2View::OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
+//{
+//	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
+//
+//	return DROPEFFECT_COPY;
+//}
+//
+//
+//DROPEFFECT CTask2View::OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point)
+//{
+//	// TODO: 여기에 특수화된 코드를 추가 및/또는 기본 클래스를 호출합니다.
+//
+//	return DROPEFFECT_COPY;
+//}
+//
+//
+//BOOL CTask2View::OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point)
+//{
+// 
+//	CFile *tt =pDataObject->GetFileData(CF_BITMAP);
+//
+//	v
+//
+//	return CView::OnDrop(pDataObject, dropEffect, point);
+//}

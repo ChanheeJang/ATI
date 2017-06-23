@@ -31,7 +31,7 @@ protected:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
-
+ 
 // Implementation
 public:
 	virtual ~CTask2View();
@@ -42,6 +42,8 @@ public:
 private:
 	CDib m_dibFile;
 	CDib m_dibResource;
+
+	COleDropTarget m_pOleDropTarget;
 protected:
 
 // Generated message map functions
@@ -57,6 +59,12 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	virtual void OnInitialUpdate();
+
+//-- Working on D&D
+//	virtual DROPEFFECT OnDragEnter(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+//	virtual DROPEFFECT OnDragOver(COleDataObject* pDataObject, DWORD dwKeyState, CPoint point);
+//	virtual BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 };
 
 #ifndef _DEBUG  // debug version in Task2View.cpp
