@@ -41,6 +41,7 @@ CTask2Doc::CTask2Doc()
 CTask2Doc::~CTask2Doc()
 {
 	delete oldSrc;
+	delete myImage;
 }
 
 BOOL CTask2Doc::OnNewDocument()
@@ -165,7 +166,7 @@ BOOL CTask2Doc::OnOpenDocument(LPCTSTR lpszPathName)
  // replace calls to Serialize with ReadDIBFile function
 	TRY{
 		//m_DIB.Read(&file);
-		m_DIB.Read(&file);
+		m_DIB.ReadSection(&file);
 		myImage->triggerInit();
 	}
 	CATCH(CFileException, eLoad) {
@@ -199,6 +200,15 @@ BOOL CTask2Doc::OnOpenDocument(LPCTSTR lpszPathName)
 		pFrame->Dlg->updatePreview();
 	}
 	
+
+	//-- Free oldSrc Memory
+	if (oldSrc != NULL)
+	{
+		delete oldSrc;
+		oldSrc = NULL;
+	}
+
+
 	//--Initialize myImage
 	myImage->IsImageInfoLoaded = false;
 	return TRUE;
