@@ -8,6 +8,9 @@
 #include "myDial.h"
 #include "MainFrm.h"
 #include "Task2View.h"
+#include "tbb.h"
+
+using namespace tbb;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -558,6 +561,139 @@ void CMainFrame::OnDestroy()
 //} //  reduced loop : 0.03624 (image.bmp)  
 
 
+//Testing
+
+//void CMainFrame::OnDilate()
+//{
+//	float t = clock();
+//
+//	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+//	pDoc->myImage->DisableAllOptions();
+//	int nWidth = pDoc->myImage->GetSrcSize().cx;
+//	int nHeight = pDoc->myImage->GetSrcSize().cy;
+//
+//	if (pDoc->oldSrc == NULL)
+//	{
+//		pDoc->oldSrc = new BYTE[nWidth*nHeight];
+//		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);
+//	}	
+//
+//	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+//
+//	for (size_t i = 0; i < nHeight; i++)
+//	{
+//		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
+//	}
+//	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	t = (float)clock();
+//	int m1, m2, m3, localMax;
+// 
+//	for (size_t i = 0; i < nHeight; i++)
+//	{
+//		BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+//		BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+//		BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+//
+//		m1 = (line1[0]> line2[0] ? line1[0] : line2[0]);
+//		m1 = (m1 > line3[0] ? m1 : line3[0]);
+//
+//		m2 = (line1[1] > line2[1] ? line1[1] : line2[1]);
+//		m2 = (m2 > line3[1] ? m2 : line3[1]);
+//		for (size_t j = 0; j < nWidth; j++)
+//		{
+//			m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] :   line2[j + 2]);
+//			m3 = (     m3	   > line3[j + 2] ?      m3		 :   line3[j + 2]);
+//
+//			if (m2 > m3)
+//			{
+//				localMax = (m1 > m2 ? m1 : m2);
+//			}
+//			else
+//			{
+//				localMax = (m1 > m3 ? m1 : m3);
+//			}
+//			m1 = m2;
+//			m2 = m3;
+//			pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+//		}
+//	}
+//	cout << "Dilation <Pointer> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	t = (float)clock();
+//
+//
+//	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
+//	{
+//		int m1, m2, m3, localMax;
+//		for (int i =r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+//		{
+//			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+//			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+//			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+//
+//			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
+//			{
+//			 
+//				m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
+//				m1 = (m1 > line3[j] ? m1 : line3[j]);
+//
+//				m2 = (line1[j+1] > line2[j+1] ? line1[j+1] : line2[j+1]);
+//				m2 = (m2 > line3[j+1] ? m2 : line3[j+1]);
+//		 
+//				m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+//				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
+//
+//				if (m2 > m3)
+//				{
+//					localMax = (m1 > m2 ? m1 : m2);
+//				}
+//				else
+//				{
+//					localMax = (m1 > m3 ? m1 : m3);
+//				}
+//				m1 = m2;
+//				m2 = m3;
+//				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+//			}
+//		}
+//	});
+//	cout << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//
+///*
+//
+//	t = (float)clock();
+//	int m1, m2, m3, localMax, prevMax;
+//
+//	for (size_t i = 0; i < nHeight; i++)
+//	{
+//		BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+//		BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+//		BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+//
+//		m1 = (line1[0]> line2[0] ? line1[0] : line2[0]);
+//		m1 = (m1 > line3[0] ? m1 : line3[0]);
+//		m2 = (line1[1] > line2[1] ? line1[1] : line2[1]);
+//		m2 = (    m2   > line3[1] ?	   m2	 : line3[1]);
+//		prevMax = (m2 > m1 ? m2 : m1);
+//
+//		for (size_t j = 0; j < nWidth; j++)
+//		{ 
+//			m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+//			m3 = (m3	   > line3[j + 2] ? m3 : line3[j + 2]);
+//			localMax = (prevMax > m3 ? prevMax : m3);
+//			prevMax = (m2 > m3 ? m2 : m3);
+//
+//			pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+//		}
+//	}
+//	cout << "Dilation <TEST> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//*/
+//
+//	delete prevImg;
+//	CTask2View *pView = (CTask2View*)GetActiveView();
+//	pView->Invalidate(false);
+//} //  Pointer : 0.03512  (image.bmp)  
+
+
 
 void CMainFrame::OnDilate()
 {
@@ -572,7 +708,7 @@ void CMainFrame::OnDilate()
 	{
 		pDoc->oldSrc = new BYTE[nWidth*nHeight];
 		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);
-	}	
+	}
 
 	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
 
@@ -581,72 +717,43 @@ void CMainFrame::OnDilate()
 		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
 	}
 	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-	t = (float)clock();
-	int m1, m2, m3, localMax;
  
-	for (size_t i = 0; i < nHeight; i++)
+	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
 	{
-		BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-		BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-		BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-		for (size_t j = 0; j < nWidth; j++)
+		int m1, m2, m3, localMax;
+		for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
 		{
-			if (j == 0)
+			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+
+			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
 			{
 				m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
-				m1 = (     m1 > line3[j] ?    m1	: line3[j]);
+				m1 = (m1 > line3[j] ? m1 : line3[j]);
 
-				m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] :   line2[j + 1]);
-				m2 = (		m2	   > line3[j + 1] ?		 m2		 :  line3[j + 1]);
-			}
-			m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] :   line2[j + 2]);
-			m3 = (     m3	   > line3[j + 2] ?      m3		 :   line3[j + 2]);
+				m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+				m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
 
-			if (m2 > m3)
-			{
-				localMax = (m1 > m2 ? m1 : m2);
+				m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
+
+				if (m2 > m3)
+				{
+					localMax = (m1 > m2 ? m1 : m2);
+				}
+				else
+				{
+					localMax = (m1 > m3 ? m1 : m3);
+				}
+				m1 = m2;
+				m2 = m3;
+				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
 			}
-			else
-			{
-				localMax = (m1 > m3 ? m1 : m3);
-			}
-			m1 = m2;
-			m2 = m3;
-			pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
 		}
-	}
-	cout << "Dilation <Pointer> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-/*
-
-	t = (float)clock();
-	int m1, m2, m3, localMax, prevMax;
-
-	for (size_t i = 0; i < nHeight; i++)
-	{
-		BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-		BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-		BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-
-		m1 = (line1[0]> line2[0] ? line1[0] : line2[0]);
-		m1 = (m1 > line3[0] ? m1 : line3[0]);
-		m2 = (line1[1] > line2[1] ? line1[1] : line2[1]);
-		m2 = (    m2   > line3[1] ?	   m2	 : line3[1]);
-		prevMax = (m2 > m1 ? m2 : m1);
-
-		for (size_t j = 0; j < nWidth; j++)
-		{ 
-			m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
-			m3 = (m3	   > line3[j + 2] ? m3 : line3[j + 2]);
-			localMax = (prevMax > m3 ? prevMax : m3);
-			prevMax = (m2 > m3 ? m2 : m3);
-
-			pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
-		}
-	}
-	cout << "Dilation <TEST> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-*/
-
+	});
+	cout << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+ 
 	delete prevImg;
 	CTask2View *pView = (CTask2View*)GetActiveView();
 	pView->Invalidate(false);
@@ -674,25 +781,42 @@ void CMainFrame::OnErode()
 		memcpy(prevImg + (nWidth+2)*(i+1)+ 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
 
 
-	for (size_t i = 0; i < nHeight; i++)
+	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
 	{
-		for (size_t j = 0; j < nWidth; j++)
+		int m1, m2, m3, localMin;
+		for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
 		{
-			int localMin = prevImg[(i+1)*(nWidth+2)] + j+1;
-			for (int k = -1; k < 2; k++)
+			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+
+			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
 			{
-				for (int l = -1; l < 2; l++)
+				m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
+				m1 = (m1 < line3[j] ? m1 : line3[j]);
+
+				m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+				m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
+
+				m3 = (line1[j + 2] < line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+				m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
+
+				if (m2 < m3)
 				{
-					if (localMin > prevImg[(i + l+1)* (nWidth+2) + j + k+1])//  
-						localMin = prevImg[(i + l+1)* (nWidth+2) + j + k+1];
+					localMin = (m1 < m2 ? m1 : m2);
 				}
+				else
+				{
+					localMin = (m1 < m3 ? m1 : m3);
+				}
+				m1 = m2;
+				m2 = m3;
+
+				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - i - 1), localMin);
 			}
-			pDoc->m_DIB.SetPixel(CPoint(j , nHeight -i-1), localMin);
 		}
-	}
-
+	});
 	cout << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
 
 	CTask2View *pView = (CTask2View*)GetActiveView();
 	pView->Invalidate(false);

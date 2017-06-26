@@ -239,10 +239,10 @@ void CTask2Doc::OnFileSave()
 			//if so ask User for overwrite
 			if (isFileExist)
 			{
-				// 'No Overwrite' 
+				// 'if No Overwrite' 
 				if (IDCANCEL == MessageBox(pWnd->GetSafeHwnd(), TEXT("The filename file already exists. Do you want to overwrite it?"), _T("Warning"), MB_ICONWARNING | MB_OKCANCEL))
 					fileDlg.DoModal();
-				else // 'Yes Overwrite' 
+				else // 'if Yes Overwrite' 
 				{
 					file.Remove(filePath); //Remove current file with same filename
 					break;
