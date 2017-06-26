@@ -484,7 +484,7 @@ void CMainFrame::OnDestroy()
 //
 //	CTask2View *pView = (CTask2View*)GetActiveView();
 //	pView->Invalidate(false);
-//} // 4 nested-loop 0.08636 (image.bmp)  
+////} // 4 nested-loop 0.08636 (image.bmp)  
 
 // m1,m2,m3 Max 
       
@@ -716,8 +716,9 @@ void CMainFrame::OnDilate()
 	{
 		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
 	}
-	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
  
+	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
 	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
 	{
 		int m1, m2, m3, localMax;
@@ -726,14 +727,18 @@ void CMainFrame::OnDilate()
 			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
 			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
 			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-
+			bool colValInit = false;
 			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
 			{
-				m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
-				m1 = (m1 > line3[j] ? m1 : line3[j]);
+				if (!colValInit)
+				{
+					m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
+					m1 = (m1 > line3[j] ? m1 : line3[j]);
 
-				m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
-				m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
+					m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+					m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
+					colValInit = true;
+				}
 
 				m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
 				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
@@ -757,8 +762,7 @@ void CMainFrame::OnDilate()
 	delete prevImg;
 	CTask2View *pView = (CTask2View*)GetActiveView();
 	pView->Invalidate(false);
-} //  Pointer : 0.03512  (image.bmp)  
-
+} //  TBB 
 
 
 
@@ -789,14 +793,18 @@ void CMainFrame::OnErode()
 			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
 			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
 			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-
+			bool colValInit = false;
 			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
 			{
-				m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
-				m1 = (m1 < line3[j] ? m1 : line3[j]);
+				if (!colValInit)
+				{
+					m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
+					m1 = (m1 < line3[j] ? m1 : line3[j]);
 
-				m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
-				m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
+					m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+					m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
+					colValInit = true;
+				}
 
 				m3 = (line1[j + 2] < line2[j + 2] ? line1[j + 2] : line2[j + 2]);
 				m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
