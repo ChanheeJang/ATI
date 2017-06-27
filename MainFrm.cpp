@@ -704,19 +704,20 @@ void CMainFrame::OnDilate()
 	int nWidth = pDoc->myImage->GetSrcSize().cx;
 	int nHeight = pDoc->myImage->GetSrcSize().cy;
 
+ 
 	if (pDoc->oldSrc == NULL)
 	{
-		pDoc->oldSrc = new BYTE[nWidth*nHeight];
-		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);
+		pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
 	}
 
 	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
 
 	for (size_t i = 0; i < nHeight; i++)
 	{
-		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
+		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
 	}
- 
+
 	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 
 	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
@@ -776,13 +777,13 @@ void CMainFrame::OnErode()
 
 	if (pDoc->oldSrc == NULL)
 	{
-		pDoc->oldSrc = new BYTE[nWidth*nHeight];
-		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, nWidth*nHeight);
+		pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
 	}
 
 	LPBYTE prevImg = new BYTE[(nWidth+2)*(nHeight+2)];
 	for (int i = 0; i < (nHeight); i++)
-		memcpy(prevImg + (nWidth+2)*(i+1)+ 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
+		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
 
 
 	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
