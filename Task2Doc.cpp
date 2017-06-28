@@ -228,6 +228,30 @@ void CTask2Doc::OnFileSave()
 	LPCTSTR szFilter = TEXT("Image Files(*.BMP)|*.BMP|All Files(*.*)|*.*||");
 	CFileDialog fileDlg(FALSE, _T("*.bmp"), NULL, OFN_HIDEREADONLY, szFilter);
 
+	CSize srcSize = myImage->GetSrcSize();
+	CRect roiRect = myImage->GetSrcZoomRect();
+	CSize roiSize = myImage->GetSrcZoomSize();
+	
+	int nWidth = roiSize.cx;
+	int nHeight = roiSize.cy;
+	int rowSize = m_DIB.CalRowSize(nWidth);
+	int dwSizeImage = rowSize * nHeight;
+
+	LPBYTE roiImage = new BYTE[(rowSize)*(nHeight)];
+	for (size_t i = 0; i < nHeight; i++)
+	{
+		//memcpy(roiImage + (rowSize)*(i), m_DIB.m_lpImage + srcSize.cx*roiRect.top + roiRect.left + (srcSize.cx)*(i), nWidth);
+		for (size_t j = 0; j < nWidth; j++)
+		{
+			if (i<255)
+				roiImage[(rowSize)*(i)+j] = i;
+			else
+				roiImage[(rowSize)*(i)+j] = 255 - (i - 255);
+		}
+		
+	}
+
+
 	if (IDOK == fileDlg.DoModal())
 	{
 		// check if selected filename file exists. 
@@ -258,7 +282,7 @@ void CTask2Doc::OnFileSave()
 		BOOL bSuccess = FALSE;
 		TRY{
 			BeginWaitCursor();
-			bSuccess = m_DIB.Write(&file);
+			bSuccess = m_DIB.WriteROI(&file,nWidth,nHeight,dwSizeImage,roiImage);
 			file.Close();
 		}
 		CATCH(CException, eSave) {
@@ -277,4 +301,71 @@ void CTask2Doc::OnFileSave()
 			MessageBox(NULL, strMsg, NULL, MB_ICONINFORMATION | MB_OK);
 		}
 	}
+	delete roiImage;
 }
+
+
+
+//void CTask2Doc::OnFileSave()
+//{
+//	//Get hWnd for MessageBox
+//	POSITION pos = GetFirstViewPosition();
+//	CView* pView = GetNextView(pos);
+//	CWnd* pWnd = pView->GetActiveWindow();
+//
+//	CFile file;
+//	CString filePath;
+//	bool isFileExist = true;
+//	LPCTSTR szFilter = TEXT("Image Files(*.BMP)|*.BMP|All Files(*.*)|*.*||");
+//	CFileDialog fileDlg(FALSE, _T("*.bmp"), NULL, OFN_HIDEREADONLY, szFilter);
+//
+//	if (IDOK == fileDlg.DoModal())
+//	{
+//		// check if selected filename file exists. 
+//		do
+//		{
+//			filePath = fileDlg.GetPathName();
+//			isFileExist = PathFileExists(filePath);
+//
+//			//if so ask User for overwrite
+//			if (isFileExist)
+//			{
+//				// 'if No Overwrite' 
+//				if (IDCANCEL == MessageBox(pWnd->GetSafeHwnd(), TEXT("The filename file already exists. Do you want to overwrite it?"), _T("Warning"), MB_ICONWARNING | MB_OKCANCEL))
+//					fileDlg.DoModal();
+//				else // 'if Yes Overwrite' 
+//				{
+//					file.Remove(filePath); //Remove current file with same filename
+//					break;
+//				}
+//			}
+//		} while (isFileExist);
+//
+//		CFileException fe;
+//		if (!file.Open(filePath, CFile::modeCreate | CFile::modeNoTruncate | CFile::modeReadWrite, &fe)) {
+//			ReportSaveLoadException(filePath, &fe, TRUE, AFX_IDP_INVALID_FILENAME);
+//		}
+//		// replace calls to Serialize with SaveDIB function
+//		BOOL bSuccess = FALSE;
+//		TRY{
+//			BeginWaitCursor();
+//			bSuccess = m_DIB.Write(&file);
+//			file.Close();
+//		}
+//		CATCH(CException, eSave) {
+//			file.Abort(); // will not throw an exception
+//			EndWaitCursor();
+//			ReportSaveLoadException(filePath, eSave, TRUE, AFX_IDP_FAILED_TO_SAVE_DOC);
+//		}
+//		END_CATCH
+//			EndWaitCursor();
+//		SetModifiedFlag(FALSE);     // back to unmodified
+//		if (!bSuccess) {
+//			// may be other-style DIB (load supported but not save)
+//			//  or other problem in Save
+//			CString strMsg;
+//			strMsg.LoadString(IDS_CANNOT_LOAD_DIB);
+//			MessageBox(NULL, strMsg, NULL, MB_ICONINFORMATION | MB_OK);
+//		}
+//	}
+//}
