@@ -49,12 +49,12 @@ using  std::endl;
 
 #ifndef ATI_CLASS
 #define ATI_CLASS
-#include "ATILIB/cdib.h"
-#include "ATILIB/Image.h"
-#include "ATILIB/ImageFrame.h"
-#include "ATILIB/PointFloat.h"
-#include "ATILIB/ZoomInfo.h"
-#include "ATILIB/ZoomInfo_Multi.h"
+#include "cdib.h"
+#include "Image.h"
+#include "ImageFrame.h"
+#include "PointFloat.h"
+#include "ZoomInfo.h"
+#include "ZoomInfo_Multi.h"
 #include "myZoom.h"
 #include "myDial.h"
 #include "myImage.h"

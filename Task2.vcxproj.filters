@@ -69,22 +69,22 @@
     <ClInclude Include="myZoom.h">
       <Filter>mySource</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\cdib.h">
+    <ClInclude Include="ZoomInfo_Multi.h">
       <Filter>ATI</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\Image.h">
+    <ClInclude Include="ZoomInfo.h">
       <Filter>ATI</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\ImageFrame.h">
+    <ClInclude Include="PointFloat.h">
       <Filter>ATI</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\PointFloat.h">
+    <ClInclude Include="ImageFrame.h">
       <Filter>ATI</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\ZoomInfo.h">
+    <ClInclude Include="Image.h">
       <Filter>ATI</Filter>
     </ClInclude>
-    <ClInclude Include="ATILIB\ZoomInfo_Multi.h">
+    <ClInclude Include="cdib.h">
       <Filter>ATI</Filter>
     </ClInclude>
   </ItemGroup>
@@ -128,22 +128,22 @@
     <ClCompile Include="myDial.cpp">
       <Filter>mySource</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\Image.cpp">
+    <ClCompile Include="Image.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\ImageFrame.cpp">
+    <ClCompile Include="cdib.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\PointFloat.cpp">
+    <ClCompile Include="ZoomInfo_Multi.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\ZoomInfo.cpp">
+    <ClCompile Include="ZoomInfo.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\ZoomInfo_Multi.cpp">
+    <ClCompile Include="PointFloat.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
-    <ClCompile Include="ATILIB\cdib.cpp">
+    <ClCompile Include="ImageFrame.cpp">
       <Filter>ATI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -226,9 +226,6 @@
       <Filter>리소스 파일</Filter>
     </Image>
     <Image Include="res\Toolbar256.bmp">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="..\..\MFC_comenzado\img\zz.BMP">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
