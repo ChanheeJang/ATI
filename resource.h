@@ -84,9 +84,7 @@
 #define IDS_FIND_TAB                    302
 #define IDS_EXPLORER                    305
 #define IDS_EDIT_MENU                   306
-#define IDB_TEST                        310
 #define IDB_BITMAP1                     312
-#define IDB_BITMAP2                     313
 #define IDD_DIALOG1                     315
 #define IDD_DIALOG2                     318
 #define ID_Preview                      32771

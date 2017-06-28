@@ -58,3 +58,4 @@ public:
 	//BOOL  PaintDIB(HDC hDC, LPRECT pDCRect, LPRECT pDIBRect) const { return m_DIB.Paint(hDC, pDCRect, pDIBRect); }
 	afx_msg void OnFileSave();
 };
+ 

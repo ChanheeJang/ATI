@@ -102,8 +102,6 @@ IDR_MENU_IMAGES         BITMAP                  "res\\menuimages.bmp"
 IDB_MENU_IMAGES_24      BITMAP                  "res\\menuimages_hc.bmp"
 IDR_PROPERTIES          BITMAP                  "res\\properties.bmp"
 IDB_PROPERTIES_HC       BITMAP                  "res\\properties_hc.bmp"
-IDB_TEST                BITMAP                  "C:\\Users\\smile\\Documents\\Visual Studio 2013\\Projects\\MFC_comenzado\\ST\\res\\test.bmp"
-IDB_BITMAP2             BITMAP                  "C:\\Users\\smile\\Documents\\Visual Studio 2013\\Projects\\MFC_comenzado\\img\\MasterChip.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

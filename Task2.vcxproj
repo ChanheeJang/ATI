@@ -185,12 +185,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\MFC_comenzado\lib\cdib.h" />
-    <ClInclude Include="..\..\MFC_comenzado\lib\Image.h" />
-    <ClInclude Include="..\..\MFC_comenzado\lib\ImageFrame.h" />
-    <ClInclude Include="..\..\MFC_comenzado\lib\PointFloat.h" />
-    <ClInclude Include="..\..\MFC_comenzado\lib\ZoomInfo.h" />
-    <ClInclude Include="..\..\MFC_comenzado\lib\ZoomInfo_Multi.h" />
+    <ClInclude Include="ATILIB\cdib.h" />
+    <ClInclude Include="ATILIB\Image.h" />
+    <ClInclude Include="ATILIB\ImageFrame.h" />
+    <ClInclude Include="ATILIB\PointFloat.h" />
+    <ClInclude Include="ATILIB\ZoomInfo.h" />
+    <ClInclude Include="ATILIB\ZoomInfo_Multi.h" />
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="MainFrm.h" />
@@ -208,12 +208,12 @@
     <ClInclude Include="ViewTree.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\MFC_comenzado\lib\cdib.cpp" />
-    <ClCompile Include="..\..\MFC_comenzado\lib\Image.cpp" />
-    <ClCompile Include="..\..\MFC_comenzado\lib\ImageFrame.cpp" />
-    <ClCompile Include="..\..\MFC_comenzado\lib\PointFloat.cpp" />
-    <ClCompile Include="..\..\MFC_comenzado\lib\ZoomInfo.cpp" />
-    <ClCompile Include="..\..\MFC_comenzado\lib\ZoomInfo_Multi.cpp" />
+    <ClCompile Include="ATILIB\cdib.cpp" />
+    <ClCompile Include="ATILIB\Image.cpp" />
+    <ClCompile Include="ATILIB\ImageFrame.cpp" />
+    <ClCompile Include="ATILIB\PointFloat.cpp" />
+    <ClCompile Include="ATILIB\ZoomInfo.cpp" />
+    <ClCompile Include="ATILIB\ZoomInfo_Multi.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -237,8 +237,7 @@
     <ResourceCompile Include="Task2.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\MFC_comenzado\img\MasterChip.bmp" />
-    <Image Include="..\..\MFC_comenzado\ST\res\test.bmp" />
+    <Image Include="..\..\MFC_comenzado\img\zz.BMP" />
     <Image Include="res\classview.bmp" />
     <Image Include="res\classview_hc.bmp" />
     <Image Include="res\class_view.ico" />

@@ -60,24 +60,6 @@
     <ClInclude Include="PropertiesWnd.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\Image.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\ImageFrame.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\PointFloat.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\ZoomInfo.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\ZoomInfo_Multi.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\MFC_comenzado\lib\cdib.h">
-      <Filter>ATI</Filter>
-    </ClInclude>
     <ClInclude Include="myDial.h">
       <Filter>mySource</Filter>
     </ClInclude>
@@ -86,6 +68,24 @@
     </ClInclude>
     <ClInclude Include="myZoom.h">
       <Filter>mySource</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\cdib.h">
+      <Filter>ATI</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\Image.h">
+      <Filter>ATI</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\ImageFrame.h">
+      <Filter>ATI</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\PointFloat.h">
+      <Filter>ATI</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\ZoomInfo.h">
+      <Filter>ATI</Filter>
+    </ClInclude>
+    <ClInclude Include="ATILIB\ZoomInfo_Multi.h">
+      <Filter>ATI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -119,24 +119,6 @@
     <ClCompile Include="PropertiesWnd.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\ImageFrame.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\PointFloat.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\ZoomInfo.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\ZoomInfo_Multi.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\cdib.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\MFC_comenzado\lib\Image.cpp">
-      <Filter>ATI</Filter>
-    </ClCompile>
     <ClCompile Include="myZoom.cpp">
       <Filter>mySource</Filter>
     </ClCompile>
@@ -145,6 +127,24 @@
     </ClCompile>
     <ClCompile Include="myDial.cpp">
       <Filter>mySource</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\Image.cpp">
+      <Filter>ATI</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\ImageFrame.cpp">
+      <Filter>ATI</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\PointFloat.cpp">
+      <Filter>ATI</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\ZoomInfo.cpp">
+      <Filter>ATI</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\ZoomInfo_Multi.cpp">
+      <Filter>ATI</Filter>
+    </ClCompile>
+    <ClCompile Include="ATILIB\cdib.cpp">
+      <Filter>ATI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -228,10 +228,7 @@
     <Image Include="res\Toolbar256.bmp">
       <Filter>리소스 파일</Filter>
     </Image>
-    <Image Include="..\..\MFC_comenzado\ST\res\test.bmp">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="..\..\MFC_comenzado\img\MasterChip.bmp">
+    <Image Include="..\..\MFC_comenzado\img\zz.BMP">
       <Filter>리소스 파일</Filter>
     </Image>
   </ItemGroup>
