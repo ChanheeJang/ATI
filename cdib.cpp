@@ -552,7 +552,7 @@ bool CDib::ReadSection(CFile* pFile, CDC* pDC /* = NULL */)
 		ComputePaletteSize(m_lpBMIH->biBitCount);
 		MakePalette();
 		UsePalette(pDC);
-		
+		m_rImageRect = CRect(0, 0, GetWidth(), GetHeight());
 		m_hBitmap = ::CreateDIBSection(pDC->GetSafeHdc(), (LPBITMAPINFO) m_lpBMIH,
 			DIB_RGB_COLORS,	(LPVOID*) &m_lpImage, NULL, 0);
 		ASSERT(m_lpImage != NULL);

@@ -28,7 +28,11 @@
 #include <iostream>
 using  std::cout;
 using  std::endl;
-
+#define COUT std::cout
+#else
+#include <iostream>
+#define COUT 0 && std::cout
+using  std::endl;
 #endif
  
 
@@ -64,7 +68,7 @@ using  std::endl;
 
 ////Timing
 //float t = clock();
-//cout << "time #.1 :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//COUT << "time #.1 :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //t = clock();
 
 

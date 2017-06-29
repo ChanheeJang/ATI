@@ -240,7 +240,7 @@ void CTask2View::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CTask2Doc* pDoc = GetDocument();
 	clickedPt = point;
-	//cout << "point.x " << point.x << "  point.y " << point.y << endl;
+	//COUT << "point.x " << point.x << "  point.y " << point.y << endl;
 
 	//-- Print current position of mouse cursor on staturbar
 	CString msg;
@@ -248,6 +248,12 @@ void CTask2View::OnMouseMove(UINT nFlags, CPoint point)
 	CMainFrame *pFrame = (CMainFrame *)AfxGetMainWnd();
 	pFrame->m_wndStatusBar.SetPaneText(3, msg);
 	
+	int mouseOnSrcX = pDoc->myImage->GetSrcZoomRect().left+ point.x*(float)pDoc->myImage->GetSrcZoomSize().cx / (float)pDoc->myImage->GetFrameSize().cx;
+	int mouseOnSrcY = pDoc->myImage->GetSrcZoomRect().top + point.y*(float)pDoc->myImage->GetSrcZoomSize().cy / (float)pDoc->myImage->GetFrameSize().cy;
+	CString msg2;
+	msg2.Format(_T("GV: %d"), pDoc->m_DIB.GetPixel(mouseOnSrcX, mouseOnSrcY));
+	pFrame->m_wndStatusBar.SetPaneText(4, msg2);
+
 	 
 	if (pDoc->myImage->EnableDrag && (nFlags & MK_CONTROL))
 	{

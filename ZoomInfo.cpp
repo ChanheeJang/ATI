@@ -66,7 +66,7 @@ void CZoomInfo::SetZoomX(int num)
     m_fScaleX = (float)m_nDeltX/(m_rcZoomBoxRect.Width());
 	m_fScaleY = (float)m_nDeltY/(m_rcZoomBoxRect.Height());	
 	
-	cout << "m_fScaleX : " << m_fScaleX << "   m_fScaleY :" << m_fScaleY << endl;
+	COUT << "m_fScaleX : " << m_fScaleX << "   m_fScaleY :" << m_fScaleY << endl;
 }
 
 

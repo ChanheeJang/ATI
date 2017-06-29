@@ -17,7 +17,7 @@ public:
 
 // Operations
 public:
-
+	CString m_strFileName;
 	
 // Overrides
 public:

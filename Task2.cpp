@@ -218,11 +218,16 @@ void CTask2App::SaveCustomState()
 
 void CTask2App::OnFileOpen()
 {
+	CTask2Doc* pDoc =
+		(CTask2Doc*)(CTask2View*)((CMainFrame*)AfxGetApp()->m_pMainWnd)->GetActiveView()->GetDocument();
+	 
 	LPCTSTR szFilter= TEXT("Image Files(*.BMP)|*.BMP|All Files(*.*)|*.*||");
 	CFileDialog fileDlg(TRUE, NULL, NULL,OFN_HIDEREADONLY,szFilter);
 	if (IDOK == fileDlg.DoModal()) {
+		pDoc->m_strFileName.SetString(fileDlg.GetFileName().GetString());
 		OpenDocumentFile(fileDlg.GetPathName());
 	}
+
 }
  
 

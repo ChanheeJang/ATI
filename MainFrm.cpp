@@ -1,7 +1,6 @@
 
 // MainFrm.cpp : implementation of the CMainFrame class
 //
-
 #pragma once
 #include "stdafx.h"
 #include "Task2.h"
@@ -41,6 +40,7 @@ static UINT indicators[] =
 {
 	ID_SEPARATOR,           // status line indicator
 	ID_INDICATOR_CAPS,
+	ID_SEPARATOR,
 	ID_SEPARATOR,
 	ID_SEPARATOR,
 	//ID_SEPARATOR,
@@ -106,6 +106,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 	m_wndStatusBar.SetPaneInfo(2, ID_SEPARATOR, SBPS_POPOUT, 120);
 	m_wndStatusBar.SetPaneInfo(3, ID_SEPARATOR, SBPS_POPOUT, 80);
+	m_wndStatusBar.SetPaneInfo(4, ID_SEPARATOR, SBPS_POPOUT, 50);
 	
 	// TODO: Delete these five lines if you don't want the toolbar and menubar to be dockable
 	m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);
@@ -423,10 +424,16 @@ void CMainFrame::OnSettingChange(UINT uFlags, LPCTSTR lpszSection)
 
 void CMainFrame::OnPreview()
 {
-	Dlg = new myDial();
-	Dlg->isPreviewOn = true;
-	Dlg->Create(IDD_DIALOG1, this);
-	Dlg->ShowWindow(SW_SHOW);
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	if (pDoc->myImage->IsImageInfoLoaded)
+	{
+		Dlg = new myDial();
+		Dlg->isPreviewOn = true;
+		Dlg->Create(IDD_DIALOG1, this);
+		Dlg->ShowWindow(SW_SHOW);
+	}
+	else
+		AfxMessageBox(TEXT("No image to preview!"));
 }
 
 void CMainFrame::OnDestroy()
@@ -479,7 +486,7 @@ void CMainFrame::OnDestroy()
 //			pDoc->m_DIB.SetPixel(CPoint(j , nHeight - (i+1)), localMax);
 //		}
 //	}
-//	cout << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	COUT << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //
 //	CTask2View *pView = (CTask2View*)GetActiveView();
 //	pView->Invalidate(false);
@@ -508,7 +515,7 @@ void CMainFrame::OnDestroy()
 //	{
 //		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
 //	}
-//	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //	t = (float)clock();
 //	int m1, m2, m3, localMax;
 //	for (size_t i = 0; i < nHeight; i++)
@@ -553,7 +560,7 @@ void CMainFrame::OnDestroy()
 //			pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
 //		}
 //	}
-//	cout << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	COUT << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //
 //	CTask2View *pView = (CTask2View*)GetActiveView();
 //	pView->Invalidate(false);
@@ -561,139 +568,149 @@ void CMainFrame::OnDestroy()
 
 void CMainFrame::OnDilate()
 {
-	float t = clock();
-
 	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-	pDoc->myImage->DisableAllOptions();
-	int nWidth = pDoc->myImage->GetSrcSize().cx;
-	int nHeight = pDoc->myImage->GetSrcSize().cy;
-
- 
-	if (pDoc->oldSrc == NULL)
+	if (pDoc->myImage->IsImageInfoLoaded)
 	{
-		pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
-		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
-	}
+		float t = clock();
 
-	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+		pDoc->myImage->DisableAllOptions();
+		int nWidth = pDoc->myImage->GetSrcSize().cx;
+		int nHeight = pDoc->myImage->GetSrcSize().cy;
 
-	for (size_t i = 0; i < nHeight; i++)
-	{
-		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
-	}
 
-	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
-	{
-		int m1, m2, m3, localMax;
-		for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+		if (pDoc->oldSrc == NULL)
 		{
-			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-			bool colValInit = false;
-			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
-			{
-				if (!colValInit)
-				{
-					m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
-					m1 = (m1 > line3[j] ? m1 : line3[j]);
-
-					m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
-					m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
-					colValInit = true;
-				}
-
-				m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
-				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
-
-				if (m2 > m3)
-				{
-					localMax = (m1 > m2 ? m1 : m2);
-				}
-				else
-				{
-					localMax = (m1 > m3 ? m1 : m3);
-				}
-				m1 = m2;
-				m2 = m3;
-				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
-			}
+			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
 		}
-	});
-	cout << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
- 
-	delete prevImg;
-	CTask2View *pView = (CTask2View*)GetActiveView();
-	pView->Invalidate(false);
+
+		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+
+		for (size_t i = 0; i < nHeight; i++)
+		{
+			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+		}
+
+		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
+		{
+			int m1, m2, m3, localMax;
+			for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+			{
+				BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+				BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+				BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+				bool colValInit = false;
+				for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
+				{
+					if (!colValInit)
+					{
+						m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
+						m1 = (m1 > line3[j] ? m1 : line3[j]);
+
+						m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+						m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
+						colValInit = true;
+					}
+
+					m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+					m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
+
+					if (m2 > m3)
+					{
+						localMax = (m1 > m2 ? m1 : m2);
+					}
+					else
+					{
+						localMax = (m1 > m3 ? m1 : m3);
+					}
+					m1 = m2;
+					m2 = m3;
+					pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+				}
+			}
+		});
+		COUT << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		delete prevImg;
+		CTask2View *pView = (CTask2View*)GetActiveView();
+		pView->Invalidate(false);
+	}
+	else
+		AfxMessageBox(TEXT("No Image Loaded!"));
 } //  TBB 
 
 
 
 void CMainFrame::OnErode()
 {
-	float t = clock();
 	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-	pDoc->myImage->DisableAllOptions();
-	int nWidth = pDoc->myImage->GetSrcSize().cx;
-	int nHeight = pDoc->myImage->GetSrcSize().cy;
-
-	if (pDoc->oldSrc == NULL)
+	if (pDoc->myImage->IsImageInfoLoaded)
 	{
-		pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
-		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
-	}
+		float t = clock();
+		pDoc->myImage->DisableAllOptions();
+		int nWidth = pDoc->myImage->GetSrcSize().cx;
+		int nHeight = pDoc->myImage->GetSrcSize().cy;
 
-	LPBYTE prevImg = new BYTE[(nWidth+2)*(nHeight+2)];
-	for (int i = 0; i < (nHeight); i++)
-		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
-
-	cout << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-	tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
-	{
-		int m1, m2, m3, localMin;
-		for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+		if (pDoc->oldSrc == NULL)
 		{
-			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-			bool colValInit = false;
-			for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
-			{
-				if (!colValInit)
-				{
-					m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
-					m1 = (m1 < line3[j] ? m1 : line3[j]);
-
-					m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
-					m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
-					colValInit = true;
-				}
-
-				m3 = (line1[j + 2] < line2[j + 2] ? line1[j + 2] : line2[j + 2]);
-				m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
-
-				if (m2 < m3)
-				{
-					localMin = (m1 < m2 ? m1 : m2);
-				}
-				else
-				{
-					localMin = (m1 < m3 ? m1 : m3);
-				}
-				m1 = m2;
-				m2 = m3;
-
-				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - i - 1), localMin);
-			}
+			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
 		}
-	});
-	cout << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 
-	CTask2View *pView = (CTask2View*)GetActiveView();
-	pView->Invalidate(false);
+		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+		for (int i = 0; i < (nHeight); i++)
+			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+
+		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
+		{
+			int m1, m2, m3, localMin;
+			for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+			{
+				BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+				BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+				BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+				bool colValInit = false;
+				for (int j = r.cols().begin(), j_end = r.cols().end(); j < j_end; j++)
+				{
+					if (!colValInit)
+					{
+						m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
+						m1 = (m1 < line3[j] ? m1 : line3[j]);
+
+						m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+						m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
+						colValInit = true;
+					}
+
+					m3 = (line1[j + 2] < line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+					m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
+
+					if (m2 < m3)
+					{
+						localMin = (m1 < m2 ? m1 : m2);
+					}
+					else
+					{
+						localMin = (m1 < m3 ? m1 : m3);
+					}
+					m1 = m2;
+					m2 = m3;
+
+					pDoc->m_DIB.SetPixel(CPoint(j, nHeight - i - 1), localMin);
+				}
+			}
+		});
+		COUT << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		CTask2View *pView = (CTask2View*)GetActiveView();
+		pView->Invalidate(false);
+	}
+	else
+		AfxMessageBox(TEXT("No Image Loaded!"));
 }
 
 
