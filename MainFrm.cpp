@@ -446,11 +446,97 @@ void CMainFrame::OnDestroy()
 	CFrameWndEx::OnDestroy();
 }
 
-// regular 4 nested loops
-    
+void CMainFrame::OnReset()
+{
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	if (pDoc->oldSrc != NULL)
+	{
+		pDoc->myImage->DisableAllOptions();
+		memcpy(pDoc->m_DIB.m_lpImage, pDoc->oldSrc, pDoc->myImage->GetSrcSize().cx*pDoc->myImage->GetSrcSize().cy);
+		
+		CTask2View *pView = (CTask2View*)GetActiveView();
+		
+		pView->Invalidate(false);
+	}
+}
+void CMainFrame::OnErode()
+{
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	if (pDoc->myImage->IsImageInfoLoaded)
+	{
+		float t = clock();
+		pDoc->myImage->DisableAllOptions();
+		int nWidth = pDoc->myImage->GetSrcSize().cx;
+		int nHeight = pDoc->myImage->GetSrcSize().cy;
+
+		if (pDoc->oldSrc == NULL)
+		{
+			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
+		}
+
+		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+		for (int i = 0; i < (nHeight); i++)
+			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+
+		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
+		{
+			int m1, m2, m3, localMin;
+			for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+			{
+				BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
+				BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+				BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+				bool colValInit = false;
+				for (int j = r.cols().begin(), j_end = r.cols().end(); j < j_end; j++)
+				{
+					if (!colValInit)
+					{
+						m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
+						m1 = (m1 < line1[j] ? m1 : line1[j]);
+
+						m2 = (line2[j + 1] < line2[j + 1] ? line2[j + 1] : line2[j + 1]);
+						m2 = (m2 < line2[j + 1] ? m2 : line2[j + 1]);
+						colValInit = true;
+					}
+
+					m3 = (line3[j + 2] < line3[j + 2] ? line3[j + 2] : line3[j + 2]);
+					m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
+
+					if (m2 < m3)
+					{
+						localMin = (m1 < m2 ? m1 : m2);
+					}
+					else
+					{
+						localMin = (m1 < m3 ? m1 : m3);
+					}
+					m1 = m2;
+					m2 = m3;
+
+					pDoc->m_DIB.SetPixel(CPoint(j, nHeight - i - 1), localMin);
+				}
+			}
+		});
+		COUT << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+
+		CTask2View *pView = (CTask2View*)GetActiveView();
+		pView->Invalidate(false);
+	}
+	else
+		AfxMessageBox(TEXT("No Image Loaded!"));
+}
+///////// TBB ////////
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* Optimization Comparison*/
 //void CMainFrame::OnDilate()
 //{
-//	float t = clock();
 //
 //	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
 //	pDoc->myImage->DisableAllOptions();
@@ -470,30 +556,288 @@ void CMainFrame::OnDestroy()
 //		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (nWidth)*(i), nWidth);
 //	}
 //
-//	for (size_t i = 0; i < nHeight; i++)
+//	//SYSTEM_INFO info;
+//	//GetSystemInfo(&info);
+//	//HANDLE *hThread = new HANDLE[info.dwNumberOfProcessors];
+//	//SetThreadAffinityMask(hThread[1], 1<<7 );
+//	LARGE_INTEGER startCounter, endCounter, frequency;
+//	QueryPerformanceFrequency(&frequency);
+//	QueryPerformanceCounter(&startCounter);
+//	float t = (float)clock();
+//	int iteration = 3;
+//	//////////////////////////////// Change This Part ////////////////////////////////////////////
+//	byte *rowVal = new byte[nWidth];
+//	byte *rowVal2 = new byte[nWidth];
+//	int m1, m2, m3, localMax;
+//	int m11, m22, m33, localMax2;
+//
+//	SetThreadAffinityMask(0, 0);
+//	for (size_t iter = 0; iter < iteration; iter++)
 //	{
-//		for (size_t j = 0; j < nWidth; j++)
+//		for (int i = 0; i < nHeight - 1; i += 2)
 //		{
-//			int localMax = prevImg[(i+1)*(nWidth+2) + j+1];
-//			for (int k = -1; k < 2; k++)
+//			BYTE *line3 = &prevImg[(i)* (nWidth + 2)];
+//			BYTE *line2 = &prevImg[(i+1)* (nWidth + 2)];
+//			BYTE *line3 = &prevImg[(i+2)* (nWidth + 2)];
+//			BYTE *line4 = &prevImg[(i+3)* (nWidth + 2)];
+//			BYTE *lineFinal = line3 + nWidth;
+//			//bool colValInit = false;
+//			int count = 0;
+//
+//			//if (!colValInit)
+//			//{
+//				m1 = (*(line2)> *(line3) ? *(line2) : *(line3));
+//				m11 = (m1 > *(line4) ? m1 : *(line4));
+//				if (m1 < *(line3)) m1 = *(line3);
+//
+//				m2 = (*(line2 + 1)>*(line3 + 1) ? *(line2 + 1) : *(line3 + 1));
+//				m22 = (m2 > *(line4 + 1) ? m2 : *(line4 + 1));
+//				if (m2 < *(line3 + 1)) m2 = *(line3 + 1);
+//				//colValInit = true;
+//			//}
+//			do
 //			{
-//				for (int l = -1; l < 2; l++)
-//				{
-//					if (localMax < prevImg[(i + l+1)* (nWidth+2) + j + k+1])
-//						localMax = prevImg[(i + l+1)* (nWidth+2) + j + k+1];
-//				}
-//			}
-//			pDoc->m_DIB.SetPixel(CPoint(j , nHeight - (i+1)), localMax);
+//		
+//
+//				m3 = (*(line2 + 2)>*(line3 + 2) ? *(line2 + 2) : *(line3 + 2));
+//				m33 = (m3 > *(line4 + 2) ? m3 : *(line4 + 2));
+//				if (m3 < *(line3 + 2)) m3 = *(line3 + 2);
+//
+//				if (m2 > m3)	localMax = (m1 > m2 ? m1 : m2);
+//				else		localMax = (m1 > m3 ? m1 : m3);
+//				m1 = m2;
+//				m2 = m3;
+//
+//				if (m22 > m33)	localMax2 = (m11 > m22 ? m11 : m22);
+//				else		localMax2 = (m11 > m33 ? m11 : m33);
+//				m11 = m22;
+//				m22 = m33;
+//
+//				*(rowVal + count) = localMax;
+//				*(rowVal2 + count++) = localMax2;
+//				line2++;
+//				line3++;
+//				line4++;
+//			} while (++line3 < lineFinal);
+//
+//			pDoc->m_DIB.SetPixel((nHeight - (i + 1)), rowVal);
+//			pDoc->m_DIB.SetPixel((nHeight - (i + 2)), rowVal2);
+//
 //		}
+//
+//		BYTE *line3 = &prevImg[(nHeight - 1)* (nWidth + 2)];
+//		BYTE *line2 = &prevImg[(nHeight)* (nWidth + 2)];
+//		BYTE *line3 = &prevImg[(nHeight+1)* (nWidth + 2)];
+//		BYTE *lineFinal = line3 + nWidth;
+//		bool colValInit = false;
+//		int count = 0;
+//		do
+//		{
+//			if (!colValInit)
+//			{
+//				m1 = (*(line2)> *(line3) ? *(line2) : *(line3));
+//				if (m1 < *(line3)) m1 = *(line3);
+//
+//				m2 = (*(line2 + 1)>*(line3 + 1) ? *(line2 + 1) : *(line3 + 1));
+//				if (m2 < *(line3 + 1)) m2 = *(line3 + 1);
+//				colValInit = true;
+//			}
+//
+//			m3 = (*(line2 + 2)>*(line3 + 2) ? *(line2 + 2) : *(line3 + 2));
+//			if (m3 < *(line3 + 2)) m3 = *(line3 + 2);
+//
+//			if (m2 > m3)	localMax = (m1 > m2 ? m1 : m2);
+//			else			localMax = (m1 > m3 ? m1 : m3);
+//			m1 = m2;
+//			m2 = m3;
+//
+//			*(rowVal + count++) = localMax;
+//		} while (++line3 < lineFinal);
+//		pDoc->m_DIB.SetPixel(0, rowVal);
 //	}
-//	COUT << "Dilation :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//	delete rowVal;	
+//	/////////////////////////////////////////////////////////////////////////////////////////////
+//	QueryPerformanceCounter(&endCounter);
+// 
+//	std::cout.precision(10);
+//	COUT << "Total Execution Time:" << (double)(endCounter.QuadPart - startCounter.QuadPart) << "  || Iteration : " << iteration << endl;
+//	COUT << "Average Execution Time :" <<(double)(endCounter.QuadPart - startCounter.QuadPart)/(double)frequency.QuadPart/iteration << endl;
+//	COUT << "CPU Clock Cycle :" <<  (double)(endCounter.QuadPart - startCounter.QuadPart)/iteration << endl;
+//	COUT << "freq : " << (double)frequency.QuadPart << endl;
+//
+//		float endTime = (float)clock() - t;
+//		COUT << "Total Execution Time:" << (endTime / CLOCKS_PER_SEC) << "  || Iteration : " << iteration << endl;
+//		COUT << "Nested Loop :" << (endTime / iteration / CLOCKS_PER_SEC) << endl;
+//	
 //
 //	CTask2View *pView = (CTask2View*)GetActiveView();
 //	pView->Invalidate(false);
-////} // 4 nested-loop 0.08636 (image.bmp)  
+//} // 4 nested-loop 0.08636 (image.bmp)  
 
-// m1,m2,m3 Max 
-      
+/* Full AVX Vectorization*/
+void CMainFrame::OnDilate()
+{
+	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+	pDoc->myImage->DisableAllOptions();
+	int nWidth = pDoc->myImage->GetSrcSize().cx;
+	int nHeight = pDoc->myImage->GetSrcSize().cy;
+
+	if (pDoc->oldSrc == NULL)
+	{
+		pDoc->oldSrc = new BYTE[pDoc->m_DIB.GetRowSize()*nHeight];
+		memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, pDoc->m_DIB.GetRowSize()*nHeight);
+	}
+
+	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)]();
+
+	for (size_t i = 0; i < nHeight; i++)
+	{
+		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+	}
+ 
+	LARGE_INTEGER startCounter, endCounter, frequency;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&startCounter);
+
+	int iteration = 2;
+	//////////////////////////////// Change This Part ////////////////////////////////////////////
+	byte *rowVal = new byte[nWidth*2]();
+	byte *rowVal2 = new byte[nWidth*2]();
+	int remnant = nWidth % 32;
+	int padWidth = (remnant ==0 ? nWidth : nWidth - remnant + 32);
+
+	LPBYTE colMaxImg = new BYTE[(nWidth+2)*(nHeight+2)]();  
+	for (size_t iter = 0; iter < iteration; iter++)
+	{
+		// Compare 3 rows and save the max
+		for (size_t i = 0; i < nHeight-1; i+=2)		
+		{
+			BYTE *line1 =(prevImg+(i)* (nWidth + 2)+1);
+			BYTE *line2 =(prevImg+(i + 1)* (nWidth + 2)+1);
+			BYTE *line3 =(prevImg+(i + 2)* (nWidth + 2)+1);
+			BYTE *line4 =(prevImg+(i + 3)* (nWidth + 2)+1);
+
+			for (size_t j = 0; j < padWidth; j += 32)
+			{
+				__m256i row1 = *(__m256i *)(line1 + j);
+				__m256i row2 = *(__m256i *)(line2 + j);
+				__m256i row3 = *(__m256i *)(line3 + j);
+				__m256i row4 = *(__m256i *)(line4 + j);
+				__m256i result1 = _mm256_max_epu8(row2, row3);
+
+				__m256i final1 = _mm256_max_epu8(row1, result1);
+				__m256i final2 = _mm256_max_epu8(row4, result1);
+
+				if (j < padWidth - 31)
+				{
+					memcpy(colMaxImg + (nWidth + 2) *(i + 1) + j + 1, (byte*)&final1, 32);
+					memcpy(colMaxImg + (nWidth + 2) *(i + 2) + j + 1, (byte*)&final2, 32);
+				}
+				else
+				{
+					memcpy(colMaxImg + (nWidth + 2) *(i + 1) + j + 1, (byte*)&final1, remnant);
+					memcpy(colMaxImg + (nWidth + 2) *(i + 2) + j + 1, (byte*)&final2, remnant);
+				}
+			}
+		}
+		if (nHeight % 2 == 1)
+		{
+			BYTE *line1 = (prevImg + (nHeight - 1)* (nWidth + 2) + 1);
+			BYTE *line2 = (prevImg + (nHeight	 )* (nWidth + 2) + 1);
+			BYTE *line3 = (prevImg + (nHeight + 1)* (nWidth + 2) + 1);
+
+			for (size_t j = 0; j < padWidth; j += 32)
+			{
+				__m256i row1 = *(__m256i *)(line1 + j);
+				__m256i row2 = *(__m256i *)(line2 + j);
+				__m256i row3 = *(__m256i *)(line3 + j);
+				__m256i result1 = _mm256_max_epu8(row2, row3);
+
+				__m256i final1 = _mm256_max_epu8(row1, result1);
+
+				if (j < padWidth - 31)
+				{
+					memcpy(colMaxImg + (nWidth + 2) *(nHeight) + j + 1, (byte*)&final1, 32);
+				}
+				else
+				{
+					memcpy(colMaxImg + (nWidth + 2) *(nHeight) + j + 1, (byte*)&final1, remnant);
+				}
+			}
+		}
+
+		// Compare 3 columns in vectorized form
+		for (int i = 0; i < nHeight-1; i +=2)
+		{
+			BYTE *line1 =  (colMaxImg+(i + 1)* (nWidth + 2));
+			BYTE *line2 =  (colMaxImg+(i + 2)* (nWidth + 2));
+			
+			for (size_t j = 0; j < padWidth; j += 32)
+			{
+				__m256i col1 = *(__m256i *)(line1 + j);
+				__m256i col2 = *(__m256i *)(line1 + j+1);
+				__m256i col3 = *(__m256i *)(line1 + j+2);
+				__m256i result1 = _mm256_max_epu8(col2, col3);
+				__m256i final1 = _mm256_max_epu8(col1, result1);
+
+				__m256i col11 = *(__m256i *)(line2 + j);
+				__m256i col22 = *(__m256i *)(line2 + j + 1);
+				__m256i col33 = *(__m256i *)(line2 + j + 2);
+				__m256i result2 = _mm256_max_epu8(col22, col33);
+				__m256i final2 = _mm256_max_epu8(col11, result2);
+				
+				if (j < padWidth - 31)
+				{
+					memcpy(rowVal + j, (byte*)&final1, 32);
+					memcpy(rowVal2 + j, (byte*)&final2, 32);
+				}
+				else
+				{
+					memcpy(rowVal + j	, (byte*)&final1, remnant);
+					memcpy(rowVal2 + j, (byte*)&final2, remnant);
+				}
+			}
+			pDoc->m_DIB.SetPixel((nHeight - (i + 1)), rowVal);
+			pDoc->m_DIB.SetPixel((nHeight - (i + 2)), rowVal2);
+		}
+		if (nHeight%2==1)
+		{
+			BYTE *line1 = (colMaxImg + (nHeight)* (nWidth + 2));
+			for (size_t j = 0; j < padWidth; j += 32)
+			{
+				__m256i col1 = *(__m256i *)(line1 + j);
+				__m256i col2 = *(__m256i *)(line1 + j + 1);
+				__m256i col3 = *(__m256i *)(line1 + j + 2);
+				__m256i result1 = _mm256_max_epu8(col2, col3);
+				__m256i final1 = _mm256_max_epu8(col1, result1);
+
+				if (j < padWidth - 31)	memcpy(rowVal + j, (byte*)&final1, 32);
+				else					memcpy(rowVal + j, (byte*)&final1, remnant);
+			}
+			pDoc->m_DIB.SetPixel(0, rowVal);
+		}
+	}
+
+	// Delete allocated memory
+	double* d = (double*)rowVal;
+	double* dd = (double*)rowVal2;
+	delete[] d;
+	delete[] dd;
+	delete[] prevImg;
+	delete[] colMaxImg;
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	QueryPerformanceCounter(&endCounter);
+
+	std::cout.precision(10);
+	COUT << "Total Execution Time:" << (double)(endCounter.QuadPart - startCounter.QuadPart) << "  || Iteration : " << iteration << endl;
+	COUT << "Average Execution Time :" << (double)(endCounter.QuadPart - startCounter.QuadPart) / (double)frequency.QuadPart / iteration << endl;
+	COUT << "CPU Clock Cycle :" << (double)(endCounter.QuadPart - startCounter.QuadPart) / iteration << endl;
+	COUT << "freq : " << (double)frequency.QuadPart << endl;
+	CTask2View *pView = (CTask2View*)GetActiveView();
+	pView->Invalidate(false);
+} // Full Vectorized
+
+/* m1,m2,m3 Max */
 //void CMainFrame::OnDilate()
 //{
 //	float t = clock();
@@ -565,9 +909,172 @@ void CMainFrame::OnDestroy()
 //	CTask2View *pView = (CTask2View*)GetActiveView();
 //	pView->Invalidate(false);
 //} //  reduced loop : 0.03624 (image.bmp)  
+//
 
+/*maxPointer dilate*/
+//void CMainFrame::OnDilate()
+//{
+//	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+//	if (pDoc->myImage->IsImageInfoLoaded)
+//	{
+//		float t = clock();
+//
+//		pDoc->myImage->DisableAllOptions();
+//		int nWidth = pDoc->myImage->GetSrcSize().cx;
+//		int nHeight = pDoc->myImage->GetSrcSize().cy;
+//
+//
+//		if (pDoc->oldSrc == NULL)
+//		{
+//			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+//			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
+//		}
+//
+//		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+//
+//		for (size_t i = 0; i < nHeight; i++)
+//		{
+//			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+//		}
+//
+//		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//
+//
+//		int m1, m2, m3, m11, m22, m33, m111, m222, m333, localMax;
+//		for (int i = 0; i<nHeight; i += 2)
+//		{
+//			BYTE *line3 = &prevImg[(i)* (nWidth + 2)];
+//			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+//			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+//			BYTE *line4 = &prevImg[(i + 3)* (nWidth + 2)];
+//
+//			m1 = (line3[0]> line2[0] ? line3[0] : line2[0]);
+//			m1 = (m1 > line3[0] ? m1 : line3[0]);
+//			m2 = (line3[1] > line2[1] ? line3[1] : line2[1]);
+//			m2 = (m2 > line3[1] ? m2 : line3[1]);
+//
+//			m11 = (line2[0] > line3[0] ? line2[0] : line3[0]);
+//			m11 = (m11 > line3[0] ? m11 : line3[0]);
+//			m22 = (line2[1] > line3[1] ? line2[1] : line3[1]);
+//			m22 = (m22 > line3[1] ? m22 : line3[1]);
+//		
+//
+//			for (int j = 0; j<nWidth; j++)
+//			{
+//				m3 = (line3[j + 2] > line2[j + 2] ? line3[j + 2] : line2[j + 2]);
+//				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
+//				if (m2 > m3) localMax = (m1 > m2 ? m1 : m2);
+//				else  localMax = (m1 > m3 ? m1 : m3);
+//				m1 = m2;
+//				m2 = m3;
+//				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+//				//////
+//				m33 = (line2[j + 2] > line3[j + 2] ? line2[j + 2] : line3[j + 2]);
+//				m33 = (m33 > line4[j + 2] ? m33 : line4[j + 2]);
+//				if (m22 > m33) localMax = (m11 > m22 ? m11 : m22);
+//				else  localMax = (m11 > m33 ? m11 : m33);
+//				m11 = m22;
+//				m22 = m33;
+//				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 2)), localMax);
+//			}
+//		}
+//
+//		COUT << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//
+//		delete prevImg;
+//		CTask2View *pView = (CTask2View*)GetActiveView();
+//		pView->Invalidate(false);
+//	}
+//
+//	else
+//		AfxMessageBox(TEXT("No Image Loaded!"));
+//} //    
 
-/////////// TBB ///////////
+/*Pointer Limit Dilate*/
+//void CMainFrame::OnDilate()
+//{
+//	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+//	if (pDoc->myImage->IsImageInfoLoaded)
+//	{
+//		float t = clock();
+//
+//		pDoc->myImage->DisableAllOptions();
+//		int nWidth = pDoc->myImage->GetSrcSize().cx;
+//		int nHeight = pDoc->myImage->GetSrcSize().cy;
+//
+//
+//		if (pDoc->oldSrc == NULL)
+//		{
+//			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
+//			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
+//		}
+//
+//		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
+//
+//		for (size_t i = 0; i < nHeight; i++)
+//		{
+//			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+//		}
+//
+//		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//
+//		//tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
+//		//{
+//		int m1, m2, m3, localMax;
+//		//for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
+//		for (int i = 0; i < nHeight; i++)
+//		{
+//			BYTE *line3 = &prevImg[(i)* (nWidth + 2)];
+//			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
+//			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
+//			BYTE *lineFinal = line3 + nWidth;
+//			bool colValInit = false;
+//			int count = 0;
+//			//for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
+//			while (line3<lineFinal)
+//			{
+//				if (!colValInit)
+//				{
+//					m1 = (*line3> *line2 ? *line3 : *line2);
+//					m1 = (m1 > *line3 ? m1 : *line3);
+//
+//					m2 = (*(line3 + 1) > *(line2 + 1) ? *(line3 + 1) : *(line2 + 1));
+//					m2 = (m2 > *(line3 + 1) ? m2 : *(line3 + 1));
+//					colValInit = true;
+//				}
+//
+//				m3 = (*(line3 + 2) > *(line2 + 2) ? *(line3 + 2) : *(line2 + 2));
+//				m3 = (m3 > *(line3 + 2) ? m3 : *(line3 + 2));
+//
+//				if (m2 > m3)
+//				{
+//					localMax = (m1 > m2 ? m1 : m2);
+//				}
+//				else
+//				{
+//					localMax = (m1 > m3 ? m1 : m3);
+//				}
+//				m1 = m2;
+//				m2 = m3;
+//				line3++;
+//				line2++;
+//				line3++;
+//
+//				pDoc->m_DIB.SetPixel(CPoint(count++, nHeight - (i + 1)), localMax);
+//			}
+//		}
+//		//});
+//		COUT << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
+//
+//		delete prevImg;
+//		CTask2View *pView = (CTask2View*)GetActiveView();
+//		pView->Invalidate(false);
+//	}
+//	else
+//		AfxMessageBox(TEXT("No Image Loaded!"));
+//} //  TBB 
+
+/*  TBB  */
 //void CMainFrame::OnDilate()
 //{
 //	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
@@ -608,15 +1115,15 @@ void CMainFrame::OnDestroy()
 //			{
 //				if (!colValInit)
 //				{
-//					m1 = (line1[j]> line2[j] ? line1[j] : line2[j]);
+//					m1 = (line3[j]> line2[j] ? line3[j] : line2[j]);
 //					m1 = (m1 > line3[j] ? m1 : line3[j]);
 //
-//					m2 = (line1[j + 1] > line2[j + 1] ? line1[j + 1] : line2[j + 1]);
+//					m2 = (line3[j + 1] > line2[j + 1] ? line3[j + 1] : line2[j + 1]);
 //					m2 = (m2 > line3[j + 1] ? m2 : line3[j + 1]);
 //					colValInit = true;
 //				}
 //
-//				m3 = (line1[j + 2] > line2[j + 2] ? line1[j + 2] : line2[j + 2]);
+//				m3 = (line3[j + 2] > line2[j + 2] ? line3[j + 2] : line2[j + 2]);
 //				m3 = (m3 > line3[j + 2] ? m3 : line3[j + 2]);
 //
 //				if (m2 > m3)
@@ -629,7 +1136,7 @@ void CMainFrame::OnDestroy()
 //				}
 //				m1 = m2;
 //				m2 = m3;
-//				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - (i + 1)), localMax);
+//				pDoc->m_DIB.SetPixel(j, nHeight - (i + 1), localMax);
 //			}
 //		}
 //		});
@@ -642,253 +1149,4 @@ void CMainFrame::OnDestroy()
 //	else
 //		AfxMessageBox(TEXT("No Image Loaded!"));
 //} //  TBB 
-//
-//void CMainFrame::OnErode()
-//{
-//	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-//	if (pDoc->myImage->IsImageInfoLoaded)
-//	{
-//		float t = clock();
-//		pDoc->myImage->DisableAllOptions();
-//		int nWidth = pDoc->myImage->GetSrcSize().cx;
-//		int nHeight = pDoc->myImage->GetSrcSize().cy;
-//
-//		if (pDoc->oldSrc == NULL)
-//		{
-//			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
-//			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
-//		}
-//
-//		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
-//		for (int i = 0; i < (nHeight); i++)
-//			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
-//
-//		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-//
-//		tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
-//		{
-//		int m1, m2, m3, localMin;
-//		for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
-//		{
-//			BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-//			BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-//			BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-//			bool colValInit = false;
-//			for (int j = r.cols().begin(), j_end = r.cols().end(); j < j_end; j++)
-//			{
-//				if (!colValInit)
-//				{
-//					m1 = (line1[j] < line2[j] ? line1[j] : line2[j]);
-//					m1 = (m1 < line3[j] ? m1 : line3[j]);
-//
-//					m2 = (line1[j + 1] < line2[j + 1] ? line1[j + 1] : line2[j + 1]);
-//					m2 = (m2 < line3[j + 1] ? m2 : line3[j + 1]);
-//					colValInit = true;
-//				}
-//
-//				m3 = (line1[j + 2] < line2[j + 2] ? line1[j + 2] : line2[j + 2]);
-//				m3 = (m3 < line3[j + 2] ? m3 : line3[j + 2]);
-//
-//				if (m2 < m3)
-//				{
-//					localMin = (m1 < m2 ? m1 : m2);
-//				}
-//				else
-//				{
-//					localMin = (m1 < m3 ? m1 : m3);
-//				}
-//				m1 = m2;
-//				m2 = m3;
-//
-//				pDoc->m_DIB.SetPixel(CPoint(j, nHeight - i - 1), localMin);
-//			}
-//		}
-//		});
-//		COUT << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-//
-//		CTask2View *pView = (CTask2View*)GetActiveView();
-//		pView->Invalidate(false);
-//	}
-//	else
-//		AfxMessageBox(TEXT("No Image Loaded!"));
-//}
-/////////// TBB ////////
-
-void CMainFrame::OnReset()
-{
-	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-	if (pDoc->oldSrc != NULL)
-	{
-		memcpy(pDoc->m_DIB.m_lpImage, pDoc->oldSrc, pDoc->myImage->GetSrcSize().cx*pDoc->myImage->GetSrcSize().cy);
-
-		CTask2View *pView = (CTask2View*)GetActiveView();
-		pView->Invalidate(false);
-	}
-}
-
-
-
-
-void CMainFrame::OnDilate()
-{
-	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-	if (pDoc->myImage->IsImageInfoLoaded)
-	{
-		float t = clock();
-
-		pDoc->myImage->DisableAllOptions();
-		int nWidth = pDoc->myImage->GetSrcSize().cx;
-		int nHeight = pDoc->myImage->GetSrcSize().cy;
-
-
-		if (pDoc->oldSrc == NULL)
-		{
-			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
-			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
-		}
-
-		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
-
-		for (size_t i = 0; i < nHeight; i++)
-		{
-			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
-		}
-
-		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-		//tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
-		//{
-		int m1, m2, m3, localMax;
-			//for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
-			for (int i = 0; i < nHeight; i++)
-			{
-				BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-				BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-				BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-				BYTE *lineFinal = line1 + nWidth;
-				bool colValInit = false;
-				int count = 0;
-				//for (int j = r.cols().begin(), j_end = r.cols().end(); j<j_end; j++)
-				while (line1<lineFinal)
-				{
-					if (!colValInit)
-					{
-						m1 = (*line1> *line2 ? *line1 : *line2);
-						m1 = (m1 > *line3 ? m1 : *line3);
-
-						m2 = (*(line1+1) > *(line2+1) ? *(line1+1) : *(line2+1));
-						m2 = (m2 > *(line3+1) ? m2 : *(line3+1));  
-						colValInit = true;
-					}
-
-					m3 = (*(line1+2) > *(line2+2) ? *(line1+2) : *(line2+2));
-					m3 = (m3 > *(line3+2) ? m3 : *(line3+2));
-
-					if (m2 > m3)
-					{
-						localMax = (m1 > m2 ? m1 : m2);
-					}
-					else
-					{
-						localMax = (m1 > m3 ? m1 : m3);
-					}
-					m1 = m2;
-					m2 = m3;
-					line1++;
-					line2++;
-					line3++;
-
-					pDoc->m_DIB.SetPixel(CPoint(count++, nHeight - (i + 1)), localMax);
-				}
-			}
-		//});
-		COUT << "Dilation <TBB> :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-		delete prevImg;
-		CTask2View *pView = (CTask2View*)GetActiveView();
-		pView->Invalidate(false);
-	}
-	else
-		AfxMessageBox(TEXT("No Image Loaded!"));
-} //  TBB 
-
-
-
-void CMainFrame::OnErode()
-{
-	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
-	if (pDoc->myImage->IsImageInfoLoaded)
-	{
-		float t = clock();
-		pDoc->myImage->DisableAllOptions();
-		int nWidth = pDoc->myImage->GetSrcSize().cx;
-		int nHeight = pDoc->myImage->GetSrcSize().cy;
-
-		if (pDoc->oldSrc == NULL)
-		{
-			pDoc->oldSrc = new BYTE[(pDoc->m_DIB.GetRowSize())*nHeight];
-			memcpy(pDoc->oldSrc, pDoc->m_DIB.m_lpImage, (pDoc->m_DIB.GetRowSize())*nHeight);
-		}
-
-		LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)];
-		for (int i = 0; i < (nHeight); i++)
-			memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
-
-		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-		//tbb::parallel_for(tbb::blocked_range2d<int>(0, nHeight, 0, nWidth), [&](const tbb::blocked_range2d<int> &r)
-		//{
-			int m1, m2, m3, localMin;
-			//for (int i = r.rows().begin(), i_end = r.rows().end(); i < i_end; i++)
-			for (int i = 0; i < nHeight; i++)
-			{
-				BYTE *line1 = &prevImg[(i)* (nWidth + 2)];
-				BYTE *line2 = &prevImg[(i + 1)* (nWidth + 2)];
-				BYTE *line3 = &prevImg[(i + 2)* (nWidth + 2)];
-				BYTE *lineFinal = line1 + nWidth;
-				bool colValInit = false;
-				int count = 0;
-				//for (int j = r.cols().begin(), j_end = r.cols().end(); j < j_end; j++)
-				while (line1<lineFinal)
-				{
-					if (!colValInit)
-					{
-						m1 = (*line1 < *line2 ? *line1 : *line2);
-						m1 = (m1 < *line3 ? m1 : *line3);
-
-						m2 = (*(line1 + 1) < *(line2 + 1) ? *(line1 + 1) : *(line2+1));
-						m2 = (m2 < *(line3 + 1) ? m2 : *(line3+1));
-						colValInit = true;
-					}
-
-					m3 = (*(line1 + 2) < *(line2 + 2) ?   *(line1 +2): *(line2 +2) );
-					m3 = (m3 < *(line3 + 2) ? m3 :  *(line3 +2));
-
-					if (m2 < m3)
-					{
-						localMin = (m1 < m2 ? m1 : m2);
-					}
-					else
-					{
-						localMin = (m1 < m3 ? m1 : m3);
-					}
-					m1 = m2;
-					m2 = m3;
-					line1++;
-					line2++;
-					line3++;
-
-					pDoc->m_DIB.SetPixel(CPoint(count++, nHeight - i - 1), localMin);
-				}
-			}
-		//});
-		COUT << "Erosion :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
-
-		CTask2View *pView = (CTask2View*)GetActiveView();
-		pView->Invalidate(false);
-	}
-	else
-		AfxMessageBox(TEXT("No Image Loaded!"));
-}
-
- 
+// 

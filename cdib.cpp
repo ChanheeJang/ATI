@@ -925,9 +925,22 @@ void CDib::ThreasHold(int n)
 
 void CDib::SetPixel(CPoint point, int n)
 {
-	//--??굳이 왜 확인을.....
-	//if( InImage(point.x, point.y) ){
-	//	m_ppBuff[point.y][point.x] = n;
-	//}
 	m_ppBuff[point.y][point.x] = n;
+}
+
+void CDib::SetPixel(int x,  int y, int n)
+{
+	m_ppBuff[y][x] = n;
+	//*(*(m_ppBuff + y) + x) = n;
+}	
+
+void CDib::SetPixel(int y, byte* n)
+{
+	//for (size_t i = 0; i < m_lpBMIH->biWidth; i++)
+	//{
+	//	m_ppBuff[y][i] = n[i];
+	//}
+	memcpy(  (m_ppBuff[y]), n, m_lpBMIH->biWidth);
+	//m_ppBuff[y][x] = n;
+	//*(*(m_ppBuff + y) + x) = n;
 }

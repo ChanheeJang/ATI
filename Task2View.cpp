@@ -247,11 +247,18 @@ void CTask2View::OnMouseMove(UINT nFlags, CPoint point)
 	msg.Format(_T("X: %d, Y: %d"), point.x, point.y);
 	CMainFrame *pFrame = (CMainFrame *)AfxGetMainWnd();
 	pFrame->m_wndStatusBar.SetPaneText(3, msg);
-	
-	int mouseOnSrcX = pDoc->myImage->GetSrcZoomRect().left+ point.x*(float)pDoc->myImage->GetSrcZoomSize().cx / (float)pDoc->myImage->GetFrameSize().cx;
-	int mouseOnSrcY = pDoc->myImage->GetSrcZoomRect().top + point.y*(float)pDoc->myImage->GetSrcZoomSize().cy / (float)pDoc->myImage->GetFrameSize().cy;
+
+	//-- Print pixel value of current mouse point  when image is loaded
 	CString msg2;
-	msg2.Format(_T("GV: %d"), pDoc->m_DIB.GetPixel(mouseOnSrcX, mouseOnSrcY));
+	if (pDoc->myImage->IsImageInfoLoaded)
+	{
+		int mouseOnSrcX = pDoc->myImage->GetSrcZoomRect().left + point.x*(float)pDoc->myImage->GetSrcZoomSize().cx / (float)pDoc->myImage->GetFrameSize().cx;
+		int mouseOnSrcY = pDoc->myImage->GetSrcZoomRect().top + point.y*(float)pDoc->myImage->GetSrcZoomSize().cy / (float)pDoc->myImage->GetFrameSize().cy;
+		msg2.Format(_T("GV: %d"), pDoc->m_DIB.GetPixel(mouseOnSrcX, mouseOnSrcY));
+	}
+	else
+		msg2.Format(_T("No Image"));
+
 	pFrame->m_wndStatusBar.SetPaneText(4, msg2);
 
 	 

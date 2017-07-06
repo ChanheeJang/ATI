@@ -27,6 +27,8 @@ protected:
 	int m_nRowSize;
 public:
 	void SetPixel(CPoint pt, int n);
+	void SetPixel(int x, int y, int n);
+	void SetPixel(int y, byte* n);
 	void ThreasHold(int n);
 	void ChangePalette(COLORREF c);
 	void GreenPalette();
