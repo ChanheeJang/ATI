@@ -14,6 +14,7 @@ using namespace tbb;
 #define new DEBUG_NEW
 #endif
 
+ 
 // CMainFrame
 
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWndEx)
@@ -44,7 +45,7 @@ static UINT indicators[] =
 	ID_SEPARATOR,
 	ID_SEPARATOR,
 	//ID_SEPARATOR,
- 
+
 };
 
 // CMainFrame construction/destruction
@@ -103,11 +104,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
 	}
-	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
+	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators) / sizeof(UINT));
 	m_wndStatusBar.SetPaneInfo(2, ID_SEPARATOR, SBPS_POPOUT, 120);
 	m_wndStatusBar.SetPaneInfo(3, ID_SEPARATOR, SBPS_POPOUT, 80);
 	m_wndStatusBar.SetPaneInfo(4, ID_SEPARATOR, SBPS_POPOUT, 50);
-	
+
 	// TODO: Delete these five lines if you don't want the toolbar and menubar to be dockable
 	m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);
 	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
@@ -193,7 +194,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
-	if( !CFrameWndEx::PreCreateWindow(cs) )
+	if (!CFrameWndEx::PreCreateWindow(cs))
 		return FALSE;
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
@@ -219,7 +220,7 @@ BOOL CMainFrame::CreateDockingWindows()
 	CString strFileView;
 	bNameValid = strFileView.LoadString(IDS_FILE_VIEW);
 	ASSERT(bNameValid);
-	if (!m_wndFileView.Create(strFileView, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_FILEVIEW, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT| CBRS_FLOAT_MULTI))
+	if (!m_wndFileView.Create(strFileView, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_FILEVIEW, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_LEFT | CBRS_FLOAT_MULTI))
 	{
 		TRACE0("Failed to create File View window\n");
 		return FALSE; // failed to create
@@ -289,9 +290,9 @@ void CMainFrame::OnViewCustomize()
 	pDlgCust->Create();
 }
 
-LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp,LPARAM lp)
+LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp, LPARAM lp)
 {
-	LRESULT lres = CFrameWndEx::OnToolbarCreateNew(wp,lp);
+	LRESULT lres = CFrameWndEx::OnToolbarCreateNew(wp, lp);
 	if (lres == 0)
 	{
 		return 0;
@@ -386,7 +387,7 @@ void CMainFrame::OnUpdateApplicationLook(CCmdUI* pCmdUI)
 }
 
 
-BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParentWnd, CCreateContext* pContext) 
+BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParentWnd, CCreateContext* pContext)
 {
 	// base class does the real work
 
@@ -402,7 +403,7 @@ BOOL CMainFrame::LoadFrame(UINT nIDResource, DWORD dwDefaultStyle, CWnd* pParent
 	bNameValid = strCustomize.LoadString(IDS_TOOLBAR_CUSTOMIZE);
 	ASSERT(bNameValid);
 
-	for (int i = 0; i < iMaxUserToolbars; i ++)
+	for (int i = 0; i < iMaxUserToolbars; i++)
 	{
 		CMFCToolBar* pUserToolbar = GetUserToolBarByIndex(i);
 		if (pUserToolbar != NULL)
@@ -438,7 +439,7 @@ void CMainFrame::OnPreview()
 
 void CMainFrame::OnDestroy()
 {
-	if (Dlg!=NULL)
+	if (Dlg != NULL)
 	{
 		Dlg->DestroyWindow();
 		delete Dlg;
@@ -453,12 +454,13 @@ void CMainFrame::OnReset()
 	{
 		pDoc->myImage->DisableAllOptions();
 		memcpy(pDoc->m_DIB.m_lpImage, pDoc->oldSrc, pDoc->myImage->GetSrcSize().cx*pDoc->myImage->GetSrcSize().cy);
-		
+
 		CTask2View *pView = (CTask2View*)GetActiveView();
-		
+
 		pView->Invalidate(false);
 	}
 }
+
 void CMainFrame::OnErode()
 {
 	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
@@ -674,7 +676,7 @@ void CMainFrame::OnErode()
 //	pView->Invalidate(false);
 //} // 4 nested-loop 0.08636 (image.bmp)  
 
-/* Full AVX Vectorization*/
+/* Full AVX Vectorization (Optimized Version)*/
 void CMainFrame::OnDilate()
 {
 	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
@@ -694,30 +696,30 @@ void CMainFrame::OnDilate()
 	{
 		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
 	}
- 
+
 	LARGE_INTEGER startCounter, endCounter, frequency;
 	QueryPerformanceFrequency(&frequency);
 	QueryPerformanceCounter(&startCounter);
 
-	int iteration = 2;
+	int iteration = 30;
 	//////////////////////////////// Change This Part ////////////////////////////////////////////
-	byte *rowVal = new byte[nWidth*2]();
-	byte *rowVal2 = new byte[nWidth*2]();
-	int remnant = nWidth % 32;
-	int padWidth = (remnant ==0 ? nWidth : nWidth - remnant + 32);
+	byte *rowVal = new byte[nWidth * 2]();
+	byte *rowVal2 = new byte[nWidth * 2]();
+	const int avxSideStep = 30;
+	int remnant = nWidth % avxSideStep;
+	int padWidth = (remnant == 0 ? nWidth : nWidth - remnant + avxSideStep);
 
-	LPBYTE colMaxImg = new BYTE[(nWidth+2)*(nHeight+2)]();  
 	for (size_t iter = 0; iter < iteration; iter++)
 	{
 		// Compare 3 rows and save the max
-		for (size_t i = 0; i < nHeight-1; i+=2)		
+		for (size_t i = 0; i < nHeight - 1; i += 2)
 		{
-			BYTE *line1 =(prevImg+(i)* (nWidth + 2)+1);
-			BYTE *line2 =(prevImg+(i + 1)* (nWidth + 2)+1);
-			BYTE *line3 =(prevImg+(i + 2)* (nWidth + 2)+1);
-			BYTE *line4 =(prevImg+(i + 3)* (nWidth + 2)+1);
+			BYTE *line1 = (prevImg + (i	   )* (nWidth + 2));
+			BYTE *line2 = (prevImg + (i + 1)* (nWidth + 2));
+			BYTE *line3 = (prevImg + (i + 2)* (nWidth + 2));
+			BYTE *line4 = (prevImg + (i + 3)* (nWidth + 2));
 
-			for (size_t j = 0; j < padWidth; j += 32)
+			for (size_t j = 0; j < padWidth; j += avxSideStep)
 			{
 				__m256i row1 = *(__m256i *)(line1 + j);
 				__m256i row2 = *(__m256i *)(line2 + j);
@@ -728,91 +730,54 @@ void CMainFrame::OnDilate()
 				__m256i final1 = _mm256_max_epu8(row1, result1);
 				__m256i final2 = _mm256_max_epu8(row4, result1);
 
-				if (j < padWidth - 31)
+				// Compare Column Local Maxs and find the Max value among 3x3 matrix
+				__m256i temp = _mm256_permute2f128_si256(final1, final1, 1);
+				__m256i col2 = _mm256_alignr_epi8(temp, final1, 1);
+				__m256i col3 = _mm256_alignr_epi8(temp, final1, 2);
+				__m256i max1 = _mm256_max_epu8(final1, _mm256_max_epu8(col2, col3));  // Result valid only 0~29
+
+				temp = _mm256_permute2f128_si256(final2, final2, 1);
+				__m256i col22 = _mm256_alignr_epi8(temp, final2, 1);
+				__m256i col33 = _mm256_alignr_epi8(temp, final2, 2);
+				__m256i max2 = _mm256_max_epu8(final2, _mm256_max_epu8(col22, col33));
+ 
+
+				if (j < padWidth - (avxSideStep-1))
 				{
-					memcpy(colMaxImg + (nWidth + 2) *(i + 1) + j + 1, (byte*)&final1, 32);
-					memcpy(colMaxImg + (nWidth + 2) *(i + 2) + j + 1, (byte*)&final2, 32);
+					memcpy(rowVal + j, (byte*)&max1, avxSideStep);
+					memcpy(rowVal2 + j, (byte*)&max2, avxSideStep);
 				}
 				else
 				{
-					memcpy(colMaxImg + (nWidth + 2) *(i + 1) + j + 1, (byte*)&final1, remnant);
-					memcpy(colMaxImg + (nWidth + 2) *(i + 2) + j + 1, (byte*)&final2, remnant);
-				}
-			}
-		}
-		if (nHeight % 2 == 1)
-		{
-			BYTE *line1 = (prevImg + (nHeight - 1)* (nWidth + 2) + 1);
-			BYTE *line2 = (prevImg + (nHeight	 )* (nWidth + 2) + 1);
-			BYTE *line3 = (prevImg + (nHeight + 1)* (nWidth + 2) + 1);
-
-			for (size_t j = 0; j < padWidth; j += 32)
-			{
-				__m256i row1 = *(__m256i *)(line1 + j);
-				__m256i row2 = *(__m256i *)(line2 + j);
-				__m256i row3 = *(__m256i *)(line3 + j);
-				__m256i result1 = _mm256_max_epu8(row2, row3);
-
-				__m256i final1 = _mm256_max_epu8(row1, result1);
-
-				if (j < padWidth - 31)
-				{
-					memcpy(colMaxImg + (nWidth + 2) *(nHeight) + j + 1, (byte*)&final1, 32);
-				}
-				else
-				{
-					memcpy(colMaxImg + (nWidth + 2) *(nHeight) + j + 1, (byte*)&final1, remnant);
-				}
-			}
-		}
-
-		// Compare 3 columns in vectorized form
-		for (int i = 0; i < nHeight-1; i +=2)
-		{
-			BYTE *line1 =  (colMaxImg+(i + 1)* (nWidth + 2));
-			BYTE *line2 =  (colMaxImg+(i + 2)* (nWidth + 2));
-			
-			for (size_t j = 0; j < padWidth; j += 32)
-			{
-				__m256i col1 = *(__m256i *)(line1 + j);
-				__m256i col2 = *(__m256i *)(line1 + j+1);
-				__m256i col3 = *(__m256i *)(line1 + j+2);
-				__m256i result1 = _mm256_max_epu8(col2, col3);
-				__m256i final1 = _mm256_max_epu8(col1, result1);
-
-				__m256i col11 = *(__m256i *)(line2 + j);
-				__m256i col22 = *(__m256i *)(line2 + j + 1);
-				__m256i col33 = *(__m256i *)(line2 + j + 2);
-				__m256i result2 = _mm256_max_epu8(col22, col33);
-				__m256i final2 = _mm256_max_epu8(col11, result2);
-				
-				if (j < padWidth - 31)
-				{
-					memcpy(rowVal + j, (byte*)&final1, 32);
-					memcpy(rowVal2 + j, (byte*)&final2, 32);
-				}
-				else
-				{
-					memcpy(rowVal + j	, (byte*)&final1, remnant);
-					memcpy(rowVal2 + j, (byte*)&final2, remnant);
+					memcpy(rowVal + j, (byte*)&max1, remnant);
+					memcpy(rowVal2 + j, (byte*)&max2, remnant);
 				}
 			}
 			pDoc->m_DIB.SetPixel((nHeight - (i + 1)), rowVal);
 			pDoc->m_DIB.SetPixel((nHeight - (i + 2)), rowVal2);
 		}
-		if (nHeight%2==1)
+		if (nHeight % 2 == 1)
 		{
-			BYTE *line1 = (colMaxImg + (nHeight)* (nWidth + 2));
-			for (size_t j = 0; j < padWidth; j += 32)
-			{
-				__m256i col1 = *(__m256i *)(line1 + j);
-				__m256i col2 = *(__m256i *)(line1 + j + 1);
-				__m256i col3 = *(__m256i *)(line1 + j + 2);
-				__m256i result1 = _mm256_max_epu8(col2, col3);
-				__m256i final1 = _mm256_max_epu8(col1, result1);
+			BYTE *line1 = (prevImg + (nHeight - 1)* (nWidth + 2) );
+			BYTE *line2 = (prevImg + (nHeight	 )* (nWidth + 2) );
+			BYTE *line3 = (prevImg + (nHeight + 1)* (nWidth + 2) );
 
-				if (j < padWidth - 31)	memcpy(rowVal + j, (byte*)&final1, 32);
-				else					memcpy(rowVal + j, (byte*)&final1, remnant);
+			for (size_t j = 0; j < padWidth; j += avxSideStep)
+			{
+				__m256i row1 = *(__m256i *)(line1 + j);
+				__m256i row2 = *(__m256i *)(line2 + j);
+				__m256i row3 = *(__m256i *)(line3 + j);
+				__m256i result1 = _mm256_max_epu8(row2, row3);
+				__m256i final1 = _mm256_max_epu8(row1, result1);
+
+				// Compare Column Local Maxs and find the Max value among 3x3 matrix
+				__m256i temp = _mm256_permute2f128_si256(final1, final1, 1);
+				__m256i col2 = _mm256_alignr_epi8(temp, final1, 1);
+				__m256i col3 = _mm256_alignr_epi8(temp, final1, 2);
+				__m256i max1 = _mm256_max_epu8(final1, _mm256_max_epu8(col2, col3));  // Result valid only 0~29
+		
+				if (j < padWidth - (avxSideStep - 1))	memcpy(rowVal + j, (byte*)&max1, avxSideStep);
+				else 	memcpy(rowVal + j, (byte*)&max1, remnant);
 			}
 			pDoc->m_DIB.SetPixel(0, rowVal);
 		}
@@ -824,7 +789,6 @@ void CMainFrame::OnDilate()
 	delete[] d;
 	delete[] dd;
 	delete[] prevImg;
-	delete[] colMaxImg;
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	QueryPerformanceCounter(&endCounter);
 
@@ -837,6 +801,8 @@ void CMainFrame::OnDilate()
 	pView->Invalidate(false);
 } // Full Vectorized
 
+
+ 
 /* m1,m2,m3 Max */
 //void CMainFrame::OnDilate()
 //{
@@ -940,7 +906,7 @@ void CMainFrame::OnDilate()
 //		COUT << "Creating Pad :" << (((float)clock() - t) / CLOCKS_PER_SEC) << endl;
 //
 //
-//		int m1, m2, m3, m11, m22, m33, m111, m222, m333, localMax;
+//		int m1, m2, m3, m11, m22, m33, m111, m222, m333, locaolMax;
 //		for (int i = 0; i<nHeight; i += 2)
 //		{
 //			BYTE *line3 = &prevImg[(i)* (nWidth + 2)];
@@ -1150,3 +1116,123 @@ void CMainFrame::OnDilate()
 //		AfxMessageBox(TEXT("No Image Loaded!"));
 //} //  TBB 
 // 
+
+/*  TBB AVX test  */
+//void CMainFrame::OnDilate()
+//{
+//	CTask2Doc *pDoc = (CTask2Doc *)GetActiveDocument();
+//	pDoc->myImage->DisableAllOptions();
+//	int nWidth = pDoc->myImage->GetSrcSize().cx;
+//	int nHeight = pDoc->myImage->GetSrcSize().cy;
+//
+//	LPBYTE prevImg = new BYTE[(nWidth + 2)*(nHeight + 2)]();
+//
+//	for (size_t i = 0; i < nHeight; i++)
+//	{
+//		memcpy(prevImg + (nWidth + 2)*(i + 1) + 1, pDoc->m_DIB.m_lpImage + (pDoc->m_DIB.GetRowSize())*(i), nWidth);
+//	}
+//
+//	LARGE_INTEGER startCounter, endCounter, frequency;
+//	QueryPerformanceFrequency(&frequency);
+//	QueryPerformanceCounter(&startCounter);
+//
+//	int iteration = 1;
+//	//////////////////////////////// Change This Part ////////////////////////////////////////////
+//	byte *rowVal = new byte[nWidth * 2]();
+//	byte *rowVal2 = new byte[nWidth * 2]();
+//	const int avxSideStep = 30;
+//	int remnant = nWidth % avxSideStep;
+//	int padWidth = (remnant == 0 ? nWidth : nWidth - remnant + avxSideStep);
+//
+//	for (size_t iter = 0; iter < iteration; iter++)
+//	{
+//		// Compare 3 rows and save the max
+//		for (size_t i = 0; i < nHeight - 1; i += 2)
+//		{
+//			BYTE *line1 = (prevImg + (i	   )* (nWidth + 2));
+//			BYTE *line2 = (prevImg + (i + 1)* (nWidth + 2));
+//			BYTE *line3 = (prevImg + (i + 2)* (nWidth + 2));
+//			BYTE *line4 = (prevImg + (i + 3)* (nWidth + 2));
+//
+//			for (size_t j = 0; j < padWidth; j += avxSideStep)
+//			{
+//				__m256i row1 = *(__m256i *)(line1 + j);
+//				__m256i row2 = *(__m256i *)(line2 + j);
+//				__m256i row3 = *(__m256i *)(line3 + j);
+//				__m256i row4 = *(__m256i *)(line4 + j);
+//				__m256i result1 = _mm256_max_epu8(row2, row3);
+//
+//				__m256i final1 = _mm256_max_epu8(row1, result1);
+//				__m256i final2 = _mm256_max_epu8(row4, result1);
+//
+//				// Compare Column Local Maxs and find the Max value among 3x3 matrix
+//				__m256i temp = _mm256_permute2f128_si256(final1, final1, 1);
+//				__m256i col2 = _mm256_alignr_epi8(temp, final1, 1);
+//				__m256i col3 = _mm256_alignr_epi8(temp, final1, 2);
+//				__m256i max1 = _mm256_max_epu8(final1, _mm256_max_epu8(col2, col3));  // Result valid only 0~29
+//
+//				temp = _mm256_permute2f128_si256(final2, final2, 1);
+//				__m256i col22 = _mm256_alignr_epi8(temp, final2, 1);
+//				__m256i col33 = _mm256_alignr_epi8(temp, final2, 2);
+//				__m256i max2 = _mm256_max_epu8(final2, _mm256_max_epu8(col22, col33));
+// 
+//
+//				if (j < padWidth - (avxSideStep-1))
+//				{
+//					memcpy(rowVal + j, (byte*)&max1, avxSideStep);
+//					memcpy(rowVal2 + j, (byte*)&max2, avxSideStep);
+//				}
+//				else
+//				{
+//					memcpy(rowVal + j, (byte*)&max1, remnant);
+//					memcpy(rowVal2 + j, (byte*)&max2, remnant);
+//				}
+//			}
+//			pDoc->m_DIB.SetPixel((nHeight - (i + 1)), rowVal);
+//			pDoc->m_DIB.SetPixel((nHeight - (i + 2)), rowVal2);
+//		}
+//		if (nHeight % 2 == 1)
+//		{
+//			BYTE *line1 = (prevImg + (nHeight - 1)* (nWidth + 2) );
+//			BYTE *line2 = (prevImg + (nHeight	 )* (nWidth + 2) );
+//			BYTE *line3 = (prevImg + (nHeight + 1)* (nWidth + 2) );
+//
+//			for (size_t j = 0; j < padWidth; j += avxSideStep)
+//			{
+//				__m256i row1 = *(__m256i *)(line1 + j);
+//				__m256i row2 = *(__m256i *)(line2 + j);
+//				__m256i row3 = *(__m256i *)(line3 + j);
+//				__m256i result1 = _mm256_max_epu8(row2, row3);
+//				__m256i final1 = _mm256_max_epu8(row1, result1);
+//
+//				// Compare Column Local Maxs and find the Max value among 3x3 matrix
+//				__m256i temp = _mm256_permute2f128_si256(final1, final1, 1);
+//				__m256i col2 = _mm256_alignr_epi8(temp, final1, 1);
+//				__m256i col3 = _mm256_alignr_epi8(temp, final1, 2);
+//				__m256i max1 = _mm256_max_epu8(final1, _mm256_max_epu8(col2, col3));  // Result valid only 0~29
+//		
+//				if (j < padWidth - (avxSideStep - 1))	memcpy(rowVal + j, (byte*)&max1, avxSideStep);
+//				else 	memcpy(rowVal + j, (byte*)&max1, remnant);
+//			}
+//			pDoc->m_DIB.SetPixel(0, rowVal);
+//		}
+//	}
+//
+//	// Delete allocated memory
+//	double* d = (double*)rowVal;
+//	double* dd = (double*)rowVal2;
+//	delete[] d;
+//	delete[] dd;
+//	delete[] prevImg;
+//	/////////////////////////////////////////////////////////////////////////////////////////////
+//	QueryPerformanceCounter(&endCounter);
+//
+//	std::cout.precision(10);
+//	COUT << "Total Execution Time:" << (double)(endCounter.QuadPart - startCounter.QuadPart) << "  || Iteration : " << iteration << endl;
+//	COUT << "Average Execution Time :" << (double)(endCounter.QuadPart - startCounter.QuadPart) / (double)frequency.QuadPart / iteration << endl;
+//	COUT << "CPU Clock Cycle :" << (double)(endCounter.QuadPart - startCounter.QuadPart) / iteration << endl;
+//	COUT << "freq : " << (double)frequency.QuadPart << endl;
+//	CTask2View *pView = (CTask2View*)GetActiveView();
+//	pView->Invalidate(false);
+//} // Full Vectorized
+

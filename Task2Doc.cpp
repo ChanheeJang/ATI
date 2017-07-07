@@ -201,12 +201,18 @@ BOOL CTask2Doc::OnOpenDocument(LPCTSTR lpszPathName)
 		pFrame->Dlg->OnInitDialog();
 		pFrame->Dlg->updatePreview();
 	}
-
+	
 	//-- Free oldSrc Memory
 	if (oldSrc != NULL)
 	{
 		delete oldSrc;
 		oldSrc = NULL;
+	}
+
+	if (oldSrc == NULL)
+	{
+		oldSrc = new BYTE[m_DIB.GetRowSize()*m_DIB.GetHeight()];
+		memcpy(oldSrc, m_DIB.m_lpImage, m_DIB.GetRowSize()*m_DIB.GetHeight());
 	}
 
 	//--Initialize myImage
